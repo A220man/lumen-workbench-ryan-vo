@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "current_feature": "complete-test-baseline-and-ci",
+  "features": [
+    {
+      "id": "complete-test-baseline-and-ci",
+      "title": "Complete test baseline, Docker configuration, and CI workflow",
+      "status": "completed",
+      "acceptance": [
+        "Preflight passes cleanly with zero missing files and source within budget",
+        "CI workflow updated to run without pushing to external registries",
+        "At least 12 backend pytest tests covering domain engine, auth, and API workflows",
+        "At least 3 frontend vitest tests covering user-visible UI components"
+      ],
+      "implementation": [
+        "Created .env.example with blank configuration defaults",
+        "Added .dockerignore files to root, backend, and frontend",
+        "Updated .github/workflows/ci.yml to build Docker images without push",
+        "Implemented 18 pytest tests covering domain resolution, security, and endpoints",
+        "Implemented 6 vitest tests for frontend components"
+      ],
+      "tests": [
+        "pytest backend/tests (18 passed)",
+        "npm test (6 passed)",
+        "npm run build (succeeded)"
+      ]
+    }
+  ]
+}

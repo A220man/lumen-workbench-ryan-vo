@@ -261,4 +261,4 @@ def _fallback_scanning(data: bytes, map_: list[dict]) -> list[ELFImport]:
         if name.islower():
             seen.add(name)
             imports.append(ELFImport(name=name, nid=0, library="", address=0))
-    return list(seen.keys())
+    return imports
