@@ -10,6 +10,7 @@ import { ProfilePanel } from "./components/profile"
 import { ShaderAnalyzerPanel } from "./components/shader-analyzer"
 import { StructurizerPanel } from "./components/structurizer-panel"
 import { StorageWritebackPanel } from "./components/storage-writeback"
+import { IntelGpuPanel } from "./components/intel-gpu-panel"
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
                   <Route path="/shaders" element={<ShaderAnalyzerPanel />} />
                   <Route path="/structurizer" element={<StructurizerPanel />} />
                   <Route path="/storage-writeback" element={<StorageWritebackPanel />} />
+                  <Route path="/intel-gpu" element={<IntelGpuPanel />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </div>

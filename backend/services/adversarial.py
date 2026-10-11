@@ -14,22 +14,12 @@ from .import_resolver import ImportResolver
 
 @dataclass(frozen=True)
 class AdversarialTestCase:
-    symbol: str
-    nid: int
-    target_library: Optional[str]
-    category: str
-    mutation_type: str
-    expected_status: str
+    symbol: str; nid: int; target_library: Optional[str]; category: str; mutation_type: str; expected_status: str
 
 @dataclass
 class StressTestReport:
-    total_cases: int
-    passed_cases: int
-    failed_cases: int
-    stability_score: float
-    false_positive_rate: float
-    category_scores: Dict[str, Dict[str, Any]]
-    vulnerabilities: List[str]
+    total_cases: int; passed_cases: int; failed_cases: int; stability_score: float
+    false_positive_rate: float; category_scores: Dict[str, Dict[str, Any]]; vulnerabilities: List[str]
 
 class AdversarialGenerator:
     """Generates synthetic adversarial test cases to probe import resolver limits."""

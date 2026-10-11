@@ -21,6 +21,7 @@ from ...services.adversarial import AdversarialGenerator, run_stress_test
 from ...services.shader_analyzer import RDNA2ShaderAnalyzer, IRInstruction, RDNA2_ANCILLARY_LAYOUT
 from ...services.structurizer import CFGStructurizerAnalyzer
 from ...services.storage_writeback import StorageWritebackAnalyzer, StorageWritebackConfig, CPUWriteEvent
+from ...services.intel_gpu import IntelGpuCompatAnalyzer
 from .auth import get_current_user, require_role
 
 router = APIRouter(tags=["API"])
@@ -29,28 +30,16 @@ adversarial_generator_singleton = AdversarialGenerator()
 shader_analyzer_singleton = RDNA2ShaderAnalyzer()
 structurizer_analyzer_singleton = CFGStructurizerAnalyzer()
 storage_writeback_analyzer_singleton = StorageWritebackAnalyzer()
+intel_gpu_analyzer_singleton = IntelGpuCompatAnalyzer()
 
 class RunEvaluationRequest(BaseModel):
-    title_name: Optional[str] = None
-    title_id: Optional[int] = None
+    title_name: Optional[str] = None; title_id: Optional[int] = None
 
 class ResolvedImportItem(BaseModel):
-    name: str
-    nid: int
-    library: Optional[str] = None
-    status: str
+    name: str; nid: int; library: Optional[str] = None; status: str
 
 class ResolutionReportResponse(BaseModel):
-    source_name: str
-    needed_libraries: List[str]
-    imports: List[ResolvedImportItem]
-    resolved_count: int
-    unresolved_count: int
-    missing_module_count: int
-    coverage: float
-    score: int
-    blockers: List[str]
-    advisory: Optional[str] = None
+    source_name: str; needed_libraries: List[str]; imports: List[ResolvedImportItem]; resolved_count: int; unresolved_count: int; missing_module_count: int; coverage: float; score: int; blockers: List[str]; advisory: Optional[str] = None
 
 @router.get("/titles", response_model=List[TitleResponse])
 async def list_titles(search: Optional[str] = None, status: Optional[str] = None, page: int = 1, page_size: int = 20, db: Session = Depends(get_db), user: Dict[str, Any] = Depends(get_current_user)):
@@ -61,37 +50,27 @@ async def list_titles(search: Optional[str] = None, status: Optional[str] = None
 
 @router.get("/titles/{title_id}", response_model=TitleResponse)
 async def get_title(title_id: int, db: Session = Depends(get_db), user: Dict[str, Any] = Depends(get_current_user)):
-    t = db.get(Title, title_id)
-    if not t: raise HTTPException(404, "Title not found")
+    if not (t := db.get(Title, title_id)): raise HTTPException(404, "Title not found")
     return TitleResponse.model_validate(t)
 
 @router.post("/titles", response_model=TitleResponse, status_code=201)
 async def create_title(data: TitleCreate, db: Session = Depends(get_db), user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
-    t = Title(**data.model_dump())
-    db.add(t)
+    t = Title(**data.model_dump()); db.add(t)
     db.add(AuditLog(action="create_title", entity_type="title", details=f"Title created: {data.name} by {user.get('email')}"))
-    db.commit()
-    db.refresh(t)
-    return TitleResponse.model_validate(t)
+    db.commit(); db.refresh(t); return TitleResponse.model_validate(t)
 
 @router.put("/titles/{title_id}", response_model=TitleResponse)
 async def update_title(title_id: int, data: TitleUpdate, db: Session = Depends(get_db), user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
-    t = db.get(Title, title_id)
-    if not t: raise HTTPException(404, "Title not found")
+    if not (t := db.get(Title, title_id)): raise HTTPException(404, "Title not found")
     for f, v in data.model_dump(exclude_unset=True).items(): setattr(t, f, v)
     db.add(AuditLog(action="update_title", entity_type="title", entity_id=title_id, details=f"Title updated by {user.get('email')}"))
-    db.commit()
-    db.refresh(t)
-    return TitleResponse.model_validate(t)
+    db.commit(); db.refresh(t); return TitleResponse.model_validate(t)
 
 @router.delete("/titles/{title_id}", status_code=204)
 async def delete_title(title_id: int, db: Session = Depends(get_db), user: Dict[str, Any] = Depends(require_role(["admin"]))):
-    t = db.get(Title, title_id)
-    if not t: raise HTTPException(404, "Title not found")
+    if not (t := db.get(Title, title_id)): raise HTTPException(404, "Title not found")
     db.add(AuditLog(action="delete_title", entity_type="title", entity_id=title_id, details=f"Title deleted by {user.get('email')}"))
-    db.delete(t)
-    db.commit()
-    return None
+    db.delete(t); db.commit(); return None
 
 @router.post("/imports/analyze", response_model=ResolutionReportResponse)
 async def analyze_imports(file: UploadFile = File(...), explain: bool = False, db: Session = Depends(get_db), user: Dict[str, Any] = Depends(get_current_user)):
@@ -100,8 +79,7 @@ async def analyze_imports(file: UploadFile = File(...), explain: bool = False, d
     rep = resolver_singleton.analyze_bytes(content, source_name=file.filename or "upload.elf")
     adv = await explain_imports(rep, build_advisor()) if explain else None
     rec = ImportRecord(title_name=file.filename or "unknown.elf", status="complete" if rep.score >= 50 else "needs_stubs", analyzed_by=user.get("email"), analysis_result=f"score={rep.score}, coverage={rep.coverage:.2f}, resolved={rep.resolved_count}")
-    db.add(rec)
-    db.commit()
+    db.add(rec); db.commit()
     return ResolutionReportResponse(source_name=rep.source_name, needed_libraries=rep.needed_libraries, imports=[ResolvedImportItem(name=i.name, nid=i.nid, library=i.library, status=i.status) for i in rep.imports], resolved_count=rep.resolved_count, unresolved_count=rep.unresolved_count, missing_module_count=rep.missing_module_count, coverage=rep.coverage, score=rep.score, blockers=rep.blockers, advisory=adv)
 
 @router.get("/evaluations", response_model=List[EvaluationResponse])
@@ -114,7 +92,7 @@ async def run_evaluation_endpoint(req: RunEvaluationRequest, db: Session = Depen
     if req.title_id and (t := db.get(Title, req.title_id)):
         db.add(Evaluation(title_id=t.id, score=round(m.f1 * 10, 2), comments=f"F1={m.f1:.3f}, Precision={m.precision:.3f}, Recall={m.recall:.3f}"))
         db.commit()
-    return {"status": "success", "precision": m.precision, "recall": m.recall, "f1": m.f1, "coverage": m.coverage, "true_positive": m.true_positive, "false_positive": m.false_positive, "false_negative": m.false_negative, "per_library": m.per_library}
+    return {"status": "success", **m.__dict__}
 
 @router.post("/adversarial/generate")
 async def generate_adversarial_spec(prefix: Optional[str] = None, category: Optional[str] = None, count: int = 5, user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
@@ -127,7 +105,7 @@ async def generate_adversarial_spec(prefix: Optional[str] = None, category: Opti
 @router.post("/adversarial/stress-test")
 async def run_adversarial_stress_test(category: Optional[str] = None, user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
     rep = run_stress_test(resolver_singleton, custom_cases=adversarial_generator_singleton.generate_cases(category=category, count=50))
-    return {"status": "success", "total_cases": rep.total_cases, "passed_cases": rep.passed_cases, "failed_cases": rep.failed_cases, "stability_score": rep.stability_score, "false_positive_rate": rep.false_positive_rate, "category_scores": rep.category_scores, "vulnerabilities": rep.vulnerabilities}
+    return {"status": "success", **rep.__dict__}
 
 @router.get("/stats")
 async def get_system_stats(db: Session = Depends(get_db), user: Dict[str, Any] = Depends(get_current_user)):
@@ -144,6 +122,7 @@ async def get_analytics(db: Session = Depends(get_db), user: Dict[str, Any] = De
     stray = shader_analyzer_singleton.get_stray_catalog_shaders()
     cfg = structurizer_analyzer_singleton.analyze_cfg("issue_2642_repro", structurizer_analyzer_singleton.get_issue_2642_graph())
     swb = storage_writeback_analyzer_singleton.analyze()
+    intel_rep = intel_gpu_analyzer_singleton.run_diagnostics()
     top_lib = max(m.per_library.items(), key=lambda x: x[1].get("tp", 0))[0] if m.per_library else "libkernel"
     total = db.execute(select(func.count(ImportRecord.id))).scalar() or 0
     return {
@@ -156,23 +135,14 @@ async def get_analytics(db: Session = Depends(get_db), user: Dict[str, Any] = De
         "shader_diagnostics": f"{sum(1 for s in stray if s.status == 'rejected_unsupported_live_use')}/{len(stray)} Stray UE4 shaders deferred (issue #2548 unsupported live use)",
         "structurizer_diagnostics": f"Issue #2642 repro: {cfg.status} ({cfg.current_blocks}/{cfg.original_blocks} blocks, budget {cfg.split_budget})",
         "storage_writeback_diagnostics": f"Silksong (issue #865): {swb.status} ({len(swb.block_policy_dropped_units)} 64K edge drops vs 0 at 4K page granularity)",
+        "intel_gpu_diagnostics": f"Intel UHD 770 (issue #2114): {intel_rep.baseline_failed} execution test failures resolved with workbench fixes",
     }
 
 class ShaderAnalyzeInstruction(BaseModel):
-    index: int
-    opcode: str
-    dest: Optional[str] = None
-    sources: List[str] = Field(default_factory=list)
-    bit_offset: Optional[int] = None
-    bit_length: Optional[int] = None
-    condition: Optional[str] = None
+    index: int; opcode: str; dest: Optional[str] = None; sources: List[str] = []; bit_offset: Optional[int] = None; bit_length: Optional[int] = None; condition: Optional[str] = None
 
 class ShaderAnalyzeRequest(BaseModel):
-    shader_address: str = "0x200e370000"
-    title_id: str = "PPSA02100"
-    ancillary_vgpr: str = "v4"
-    instructions: Optional[List[ShaderAnalyzeInstruction]] = None
-    raw_word: Optional[int] = None
+    shader_address: str = "0x200e370000"; title_id: str = "PPSA02100"; ancillary_vgpr: str = "v4"; instructions: Optional[List[ShaderAnalyzeInstruction]] = None; raw_word: Optional[int] = None
 
 @router.get("/shaders/rdna2-layout")
 async def get_rdna2_layout(user: Dict[str, Any] = Depends(get_current_user)):
@@ -182,9 +152,8 @@ async def get_rdna2_layout(user: Dict[str, Any] = Depends(get_current_user)):
 async def analyze_shader(payload: ShaderAnalyzeRequest, user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
     insts = [IRInstruction(i.index, i.opcode, i.dest, i.sources, i.bit_offset, i.bit_length, i.condition) for i in (payload.instructions or [])]
     rep = shader_analyzer_singleton.analyze_ir_stream(payload.shader_address, payload.title_id, insts, payload.ancillary_vgpr)
-    dec = shader_analyzer_singleton.decode_word(payload.raw_word) if payload.raw_word is not None else None
     res = rep.__dict__.copy()
-    res["decoded_word"] = dec
+    res["decoded_word"] = shader_analyzer_singleton.decode_word(payload.raw_word) if payload.raw_word is not None else None
     return res
 
 @router.get("/shaders/stray-batch")
@@ -192,9 +161,7 @@ async def get_stray_shaders_batch(user: Dict[str, Any] = Depends(get_current_use
     return [r.__dict__ for r in shader_analyzer_singleton.get_stray_catalog_shaders()]
 
 class CFGAnalyzeRequest(BaseModel):
-    name: str = "custom_cfg"
-    adjacency: List[List[int]]
-    split_budget: Optional[int] = None
+    name: str = "custom_cfg"; adjacency: List[List[int]]; split_budget: Optional[int] = None
 
 @router.post("/structurizer/analyze")
 async def analyze_cfg(payload: CFGAnalyzeRequest, user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
@@ -208,34 +175,19 @@ async def get_structurizer_presets(user: Dict[str, Any] = Depends(get_current_us
     ]
 
 class CPUWriteEventItem(BaseModel):
-    address: int
-    size_bytes: int
-    generation: int
-    description: str
+    address: int; size_bytes: int; generation: int; description: str
 
 class StorageSimulateRequest(BaseModel):
-    title_id: str = "PPSA12544"
-    title_name: str = "Hollow Knight: Silksong (Unity TextCore)"
-    texture_address: int = 0x25E042000
-    texture_size: int = 0x40000
-    block_size: int = 65536
-    page_size: int = 4096
-    gpu_dispatch_generation: int = 87617
-    cpu_writes: Optional[List[CPUWriteEventItem]] = None
+    title_id: str = "PPSA12544"; title_name: str = "Hollow Knight: Silksong (Unity TextCore)"; texture_address: int = 0x25E042000; texture_size: int = 0x40000; block_size: int = 65536; page_size: int = 4096; gpu_dispatch_generation: int = 87617; cpu_writes: Optional[List[CPUWriteEventItem]] = None
 
 @router.post("/storage-writeback/simulate")
 async def simulate_storage_writeback(payload: StorageSimulateRequest, user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
     cfg = StorageWritebackConfig(payload.title_id, payload.title_name, payload.texture_address, payload.texture_size, payload.block_size, payload.page_size, payload.gpu_dispatch_generation)
     writes = [CPUWriteEvent(w.address, w.size_bytes, w.generation, w.description) for w in payload.cpu_writes] if payload.cpu_writes is not None else None
     rep = storage_writeback_analyzer_singleton.analyze(cfg, writes)
-    return {
-        "title_id": rep.title_id, "title_name": rep.title_name, "texture_address": hex(rep.texture_address), "texture_size": hex(rep.texture_size),
-        "alignment_offset": hex(rep.alignment_offset), "total_blocks_spanned": rep.total_blocks_spanned, "total_pages_spanned": rep.total_pages_spanned,
-        "edge_blocks_count": rep.edge_blocks_count, "block_policy_corrupted": rep.block_policy_corrupted, "block_policy_dropped_units": rep.block_policy_dropped_units,
-        "page_policy_corrupted": rep.page_policy_corrupted, "page_policy_dropped_units": rep.page_policy_dropped_units, "eager_writeback_corrupted": rep.eager_writeback_corrupted,
-        "corrupted_glyphs": rep.corrupted_glyphs, "warning_logged": rep.warning_logged, "root_cause": rep.root_cause, "recommendation": rep.recommendation,
-        "status": rep.status, "units": [u.__dict__ for u in rep.units],
-    }
+    d = rep.__dict__.copy()
+    d.update({"texture_address": hex(rep.texture_address), "texture_size": hex(rep.texture_size), "alignment_offset": hex(rep.alignment_offset), "units": [u.__dict__ for u in rep.units]})
+    return d
 
 @router.get("/storage-writeback/presets")
 async def get_storage_writeback_presets(user: Dict[str, Any] = Depends(get_current_user)):
@@ -243,3 +195,24 @@ async def get_storage_writeback_presets(user: Dict[str, Any] = Depends(get_curre
         {"id": "silksong-sdf-atlas", "name": "Silksong SDF Font Atlas (Issue #865)", "description": "Unaligned 512x512 R8 texture at 0x25e042000 dropped by 64 KiB block StoredOver", "texture_address": 0x25E042000, "texture_size": 0x40000, "expected_status": "conflict_detected"},
         {"id": "aligned-baseline", "name": "Aligned 64 KiB Texture Baseline", "description": "64 KiB aligned texture with no adjacent sharing allocations", "texture_address": 0x25E040000, "texture_size": 0x40000, "expected_status": "clean"},
     ]
+
+@router.get("/intel-gpu/profiles")
+async def get_intel_gpu_profiles(user: Dict[str, Any] = Depends(get_current_user)):
+    return [p.__dict__ for p in intel_gpu_analyzer_singleton.get_profiles()]
+
+@router.get("/intel-gpu/diagnostics")
+async def get_intel_gpu_diagnostics(gpu_id: str = "intel_uhd_770", apply_fixes: bool = False, user: Dict[str, Any] = Depends(get_current_user)):
+    rep = intel_gpu_analyzer_singleton.run_diagnostics(gpu_id=gpu_id, apply_fixes=apply_fixes)
+    d = rep.__dict__.copy()
+    d["diagnostics"] = [t.__dict__ for t in rep.diagnostics]
+    return d
+
+class IntelGpuSimulateRequest(BaseModel):
+    test_id: str = "vop1_float_unary"; gpu_id: str = "intel_uhd_770"; apply_fix: bool = False
+
+@router.post("/intel-gpu/simulate")
+async def simulate_intel_gpu_test(payload: IntelGpuSimulateRequest, user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
+    try:
+        return intel_gpu_analyzer_singleton.diagnose_test(payload.test_id, payload.gpu_id, payload.apply_fix).__dict__
+    except KeyError:
+        raise HTTPException(400, f"Unknown test_id: {payload.test_id}")
