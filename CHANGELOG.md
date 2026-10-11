@@ -1,8 +1,18 @@
 # Changelog
 
-## 1.16.0 — work-in-progress checkpoint
+## 1.17.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+## 1.16.0 — Version synchronization and product baseline completion
+
+### Changed
+- **Version synchronization**: Aligned `VERSION` (1.16.0), `README.md` (1.16.0), `portfolio.json` (1.16.0), `pyproject.toml` (1.16.0), and `frontend/package.json` (1.16.0) to consistent version.
+- **Portfolio metadata**: Updated `portfolio.json` status from `work-in-progress` to `active` with descriptive AI/ML workflow summary.
+- **README**: Removed work-in-progress banner; reflects active release.
+
+### Fixed
+- **Documentation consistency**: Corrected version references across all project metadata files.
 
 ## 1.15.0 — ELF Import Analysis UI workflow
 
