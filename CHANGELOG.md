@@ -1,10 +1,23 @@
 # Changelog
 
-## 1.15.0 — work-in-progress checkpoint
+## 1.16.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
 
-## 1.14.0 — Version synchronization and product baseline completion
+## 1.15.0 — ELF Import Analysis UI workflow
+
+### Added
+- **Import Analysis Page**: New `/imports/analyze` route with `ImportAnalysis` component (`frontend/src/components/import-analysis.tsx`) for uploading PS5 ELF binaries and viewing resolution reports.
+- **Resolution Report Display**: Coverage percentage, resolved/unresolved/missing-module counts, score (0–100), top blocker list, and tabular import details with NID (hex), library, and status badges (resolved/unresolved/missing-module).
+- **Navigation**: Added "Import Analysis" link in sidebar (`frontend/src/layout.tsx`) and route wiring in `App.tsx`.
+- **Frontend Tests**: Added `frontend/tests/import-analysis.test.tsx` with 3 tests covering authentication gate, file upload form interaction, and button state management.
+
+### Changed
+- **Version**: `VERSION` file updated to 1.15.0 (other metadata files remain at 1.14.0 per product baseline; next synchronization will align all).
+
+ ## 1.14.0 — Version synchronization and product baseline completion
+ 
+ ### Changed
 
 ### Changed
 - **Version synchronization**: Aligned `VERSION` (1.14.0), `README.md` (1.14.0), `portfolio.json` (1.14.0), `pyproject.toml` (1.14.0), and `frontend/package.json` (1.14.0) to consistent version.

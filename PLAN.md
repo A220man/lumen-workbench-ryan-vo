@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-version-sync-and-ci-optimization
+import-analysis-workflow
 
 ## Roadmap
 
@@ -129,4 +129,19 @@ Acceptance:
 Implementation: `README.md`, `portfolio.json`, `pyproject.toml`, `frontend/package.json`, `CHANGELOG.md`, `.github/workflows/ci.yml`
 
 Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `backend/tests/test_auth.py`, `frontend/tests/`
+
+### import-analysis-workflow — ELF Import Analysis UI workflow
+
+Status: done
+
+Acceptance:
+- Frontend page at /imports/analyze for uploading ELF binaries
+- Uploads file to /api/v1/imports/analyze and displays resolution report
+- Shows coverage, resolved/unresolved counts, score, and blocker list
+- Tabular import detail with NID, library, and status badges
+- Navigation link in sidebar for authenticated users
+
+Implementation: `frontend/src/components/import-analysis.tsx`, `frontend/src/App.tsx`, `frontend/src/layout.tsx`
+
+Tests: `frontend/tests/import-analysis.test.tsx`
 
