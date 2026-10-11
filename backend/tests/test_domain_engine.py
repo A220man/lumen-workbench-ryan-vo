@@ -310,6 +310,69 @@ def test_storage_writeback_aligned_baseline():
     assert report.status == "clean"
 
 
+def test_intel_gpu_baseline_failures():
+    """Verify Intel UHD 770 execution test failures vs RTX 4080 (issue #2114)."""
+    from backend.services.intel_gpu import IntelGpuCompatAnalyzer
+    analyzer = IntelGpuCompatAnalyzer()
+    intel_rep = analyzer.run_diagnostics("intel_uhd_770", apply_fixes=False)
+    assert intel_rep.gpu_id == "intel_uhd_770"
+    assert intel_rep.baseline_failed == 4
+    assert intel_rep.baseline_passed == 0
+    assert intel_rep.has_int64_atomics is False
+    assert intel_rep.overall_status == "hardware_incompatibilities_detected"
+    assert len(intel_rep.diagnostics) == 4
+    vop1 = next(d for d in intel_rep.diagnostics if d.test_id == "vop1_float_unary")
+    assert vop1.status == "failed"
+    assert vop1.ulp_drift == 1
+    sdwa = next(d for d in intel_rep.diagnostics if d.test_id == "sdwa_float_selectors")
+    assert sdwa.status == "failed"
+    assert "0xfda00047" in sdwa.observed_output
+    vopc = next(d for d in intel_rep.diagnostics if d.test_id == "vopc_compare")
+    assert vopc.status == "failed"
+    assert vopc.observed_output == "0"
+    atomics = next(d for d in intel_rep.diagnostics if d.test_id == "buffer_unaligned_base")
+    assert atomics.status == "failed"
+    assert "shaderBufferInt64Atomics" in atomics.observed_output
+
+    # RTX 4080 has clean baseline
+    rtx_rep = analyzer.run_diagnostics("rtx_4080", apply_fixes=False)
+    assert rtx_rep.baseline_failed == 0
+    assert rtx_rep.baseline_passed == 4
+    assert rtx_rep.overall_status == "clean"
+
+
+def test_intel_gpu_workbench_fixes():
+    """Verify applying workbench fixes resolves all 4 Intel UHD 770 failures."""
+    from backend.services.intel_gpu import IntelGpuCompatAnalyzer
+    analyzer = IntelGpuCompatAnalyzer()
+    rep = analyzer.run_diagnostics("intel_uhd_770", apply_fixes=True)
+    assert rep.baseline_failed == 0
+    assert rep.baseline_passed == 4
+    assert rep.overall_status == "clean"
+    assert all(d.status == "passed" for d in rep.diagnostics)
+
+
+def test_intel_gpu_single_diagnose_methods():
+    """Verify single test simulation methods."""
+    from backend.services.intel_gpu import IntelGpuCompatAnalyzer
+    analyzer = IntelGpuCompatAnalyzer()
+    d1 = analyzer.diagnose_vop1_fract("intel_uhd_770", apply_fix=False)
+    assert d1.status == "failed"
+    assert d1.ulp_drift == 1
+    d1_fixed = analyzer.diagnose_vop1_fract("intel_uhd_770", apply_fix=True)
+    assert d1_fixed.status == "passed"
+
+    d2 = analyzer.diagnose_sdwa_min_f16("intel_uhd_770", apply_fix=True)
+    assert d2.status == "passed"
+
+    d3 = analyzer.diagnose_vopc_compare("intel_uhd_770", apply_fix=True)
+    assert d3.status == "passed"
+
+    d4 = analyzer.diagnose_buffer_atomics("intel_uhd_770", apply_fix=True)
+    assert d4.status == "passed"
+
+
+
 
 
 

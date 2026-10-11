@@ -10,33 +10,20 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 @dataclass
 class LoopInfo:
-    header: int
-    latches: List[int]
-    is_multi_latch: bool
+    header: int; latches: List[int]; is_multi_latch: bool
 
 @dataclass
 class NestedSelectionConflict:
-    header: int
-    merge_block: int
-    external_preds: List[int]
-    in_construct_preds: List[int]
-    shares_latch_edge: bool
+    header: int; merge_block: int; external_preds: List[int]
+    in_construct_preds: List[int]; shares_latch_edge: bool
 
 @dataclass
 class CFGDiagnosticReport:
-    name: str
-    original_blocks: int
-    current_blocks: int
-    split_budget: int
-    exceeded_budget: bool
-    multi_latch_loops: List[Dict[str, Any]]
-    selection_conflicts: List[Dict[str, Any]]
-    synthetic_chain_steps: List[str]
-    infinite_recursion_detected: bool
-    root_cause: Optional[str]
-    recommendation: Optional[str]
-    matches_issue_2642: bool
-    status: str
+    name: str; original_blocks: int; current_blocks: int; split_budget: int
+    exceeded_budget: bool; multi_latch_loops: List[Dict[str, Any]]
+    selection_conflicts: List[Dict[str, Any]]; synthetic_chain_steps: List[str]
+    infinite_recursion_detected: bool; root_cause: Optional[str]
+    recommendation: Optional[str]; matches_issue_2642: bool; status: str
 
 class CFGStructurizerAnalyzer:
     """Diagnoses CFG shared merge splitting loops and multi-latch loop structures."""

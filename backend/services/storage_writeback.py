@@ -10,59 +10,29 @@ from typing import Dict, List, Optional, Tuple
 
 @dataclass
 class CPUWriteEvent:
-    address: int
-    size_bytes: int
-    generation: int
-    description: str
+    address: int; size_bytes: int; generation: int; description: str
 
 @dataclass
 class StorageWritebackConfig:
-    title_id: str = "PPSA12544"
-    title_name: str = "Hollow Knight: Silksong (Unity TextCore)"
-    texture_address: int = 0x25E042000
-    texture_size: int = 0x40000
-    block_size: int = 65536
-    page_size: int = 4096
-    gpu_dispatch_generation: int = 87617
+    title_id: str = "PPSA12544"; title_name: str = "Hollow Knight: Silksong (Unity TextCore)"
+    texture_address: int = 0x25E042000; texture_size: int = 0x40000; block_size: int = 65536
+    page_size: int = 4096; gpu_dispatch_generation: int = 87617
 
 @dataclass
 class UnitDiagnostic:
-    unit_id: str
-    guest_start: int
-    guest_end: int
-    offset_in_texture: int
-    size_bytes: int
-    is_edge_block: bool
-    block_index: int
-    gpu_generation: int
-    cpu_block_stamp: int
-    block_policy_stored_over: bool
-    page_policy_stored_over: bool
-    edge_reason: Optional[str] = None
+    unit_id: str; guest_start: int; guest_end: int; offset_in_texture: int; size_bytes: int
+    is_edge_block: bool; block_index: int; gpu_generation: int; cpu_block_stamp: int
+    block_policy_stored_over: bool; page_policy_stored_over: bool; edge_reason: Optional[str] = None
 
 @dataclass
 class StorageWritebackReport:
-    title_id: str
-    title_name: str
-    texture_address: int
-    texture_size: int
-    block_size: int
-    page_size: int
-    alignment_offset: int
-    total_blocks_spanned: int
-    total_pages_spanned: int
-    edge_blocks_count: int
-    units: List[UnitDiagnostic]
-    block_policy_corrupted: bool
-    block_policy_dropped_units: List[str]
-    page_policy_corrupted: bool
-    page_policy_dropped_units: List[str]
-    eager_writeback_corrupted: bool
-    corrupted_glyphs: List[str]
-    warning_logged: Optional[str]
-    root_cause: str
-    recommendation: str
-    status: str
+    title_id: str; title_name: str; texture_address: int; texture_size: int; block_size: int
+    page_size: int; alignment_offset: int; total_blocks_spanned: int; total_pages_spanned: int
+    edge_blocks_count: int; units: List[UnitDiagnostic]; block_policy_corrupted: bool
+    block_policy_dropped_units: List[str]; page_policy_corrupted: bool
+    page_policy_dropped_units: List[str]; eager_writeback_corrupted: bool
+    corrupted_glyphs: List[str]; warning_logged: Optional[str]; root_cause: str
+    recommendation: str; status: str
 
 class StorageWritebackAnalyzer:
     """Analyzes and simulates GPU storage image write-back conflict policies."""
