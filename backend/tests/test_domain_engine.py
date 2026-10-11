@@ -267,5 +267,49 @@ def test_structurizer_clean_baseline():
     assert report.status == "clean"
 
 
+def test_storage_writeback_silksong_conflict_detection():
+    """Verify AnyPS5 issue #865 Silksong SDF atlas writeback drops GPU results under 64K block tracking."""
+    from backend.services.storage_writeback import StorageWritebackAnalyzer
+    analyzer = StorageWritebackAnalyzer()
+    report = analyzer.analyze()
+    assert report.title_id == "PPSA12544"
+    assert report.block_policy_corrupted is True
+    assert len(report.block_policy_dropped_units) >= 2
+    assert "OPTIONS_O" in report.corrupted_glyphs
+    assert "GAME_MARK" in report.corrupted_glyphs
+    assert report.warning_logged is not None
+    assert "0x25e042000" in report.warning_logged
+    assert report.status == "conflict_detected"
+    assert report.edge_blocks_count == 2
+
+
+def test_storage_writeback_4k_page_granularity_preservation():
+    """Verify 4 KiB page granularity eliminates false-positive StoredOver drops for Silksong."""
+    from backend.services.storage_writeback import StorageWritebackAnalyzer
+    analyzer = StorageWritebackAnalyzer()
+    report = analyzer.analyze()
+    assert report.page_policy_corrupted is False
+    assert len(report.page_policy_dropped_units) == 0
+    assert report.eager_writeback_corrupted is False
+
+
+def test_storage_writeback_aligned_baseline():
+    """Verify aligned 64 KiB texture without adjacent sharing allocations is clean under all policies."""
+    from backend.services.storage_writeback import StorageWritebackAnalyzer, StorageWritebackConfig
+    analyzer = StorageWritebackAnalyzer()
+    cfg = StorageWritebackConfig(
+        title_id="PPSA00000",
+        title_name="Aligned Baseline",
+        texture_address=0x25E040000,
+        texture_size=0x40000,
+    )
+    report = analyzer.analyze(config=cfg, cpu_writes=[])
+    assert report.block_policy_corrupted is False
+    assert report.page_policy_corrupted is False
+    assert report.edge_blocks_count == 0
+    assert report.status == "clean"
+
+
+
 
 

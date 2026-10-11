@@ -296,4 +296,37 @@ def test_structurizer_analyze_endpoint(client, operator_headers):
     assert "Decouple loop latch join" in report["recommendation"]
 
 
+def test_storage_writeback_presets_endpoint(client, operator_headers):
+    """Test retrieving storage writeback presets."""
+    res = client.get("/api/v1/storage-writeback/presets", headers=operator_headers)
+    assert res.status_code == 200
+    presets = res.json()
+    assert len(presets) >= 2
+    repro = next(p for p in presets if p["id"] == "silksong-sdf-atlas")
+    assert repro["texture_address"] == 0x25E042000
+    assert repro["expected_status"] == "conflict_detected"
+
+
+def test_storage_writeback_simulate_endpoint(client, operator_headers):
+    """Test simulating storage writeback conflict for Silksong issue #865."""
+    payload = {
+        "title_id": "PPSA12544",
+        "title_name": "Hollow Knight: Silksong (Unity TextCore)",
+        "texture_address": 0x25E042000,
+        "texture_size": 0x40000,
+        "gpu_dispatch_generation": 87617,
+    }
+    res = client.post("/api/v1/storage-writeback/simulate", json=payload, headers=operator_headers)
+    assert res.status_code == 200
+    report = res.json()
+    assert report["title_id"] == "PPSA12544"
+    assert report["block_policy_corrupted"] is True
+    assert report["page_policy_corrupted"] is False
+    assert report["edge_blocks_count"] == 2
+    assert "OPTIONS_O" in report["corrupted_glyphs"]
+    assert report["status"] == "conflict_detected"
+    assert len(report["units"]) > 0
+
+
+
 

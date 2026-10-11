@@ -5,15 +5,12 @@ missing-module probes, and malformed inputs to stress-test the resolver.
 Computes stress-test stability scores and tracks boundary failure rates.
 """
 from __future__ import annotations
-
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
-
 from ..core.elf_parser import ELFImport
 from ..core.nid import nid_of
 from .export_db import build_export_db
-from .import_resolver import ImportResolver, ResolvedImport
-
+from .import_resolver import ImportResolver
 
 @dataclass(frozen=True)
 class AdversarialTestCase:
@@ -22,19 +19,17 @@ class AdversarialTestCase:
     target_library: Optional[str]
     category: str
     mutation_type: str
-    expected_status: str  # "resolved" | "unresolved" | "missing-module"
-
+    expected_status: str
 
 @dataclass
 class StressTestReport:
     total_cases: int
     passed_cases: int
     failed_cases: int
-    stability_score: float  # 0.0 to 100.0
-    false_positive_rate: float  # 0.0 to 1.0
+    stability_score: float
+    false_positive_rate: float
     category_scores: Dict[str, Dict[str, Any]]
     vulnerabilities: List[str]
-
 
 class AdversarialGenerator:
     """Generates synthetic adversarial test cases to probe import resolver limits."""
@@ -42,10 +37,7 @@ class AdversarialGenerator:
     def __init__(self) -> None:
         self.export_db = build_export_db()
 
-    def generate_cases(
-        self, category: Optional[str] = None, count: int = 20
-    ) -> List[AdversarialTestCase]:
-        """Generate adversarial test cases filtered by category or across all categories."""
+    def generate_cases(self, category: Optional[str] = None, count: int = 20) -> List[AdversarialTestCase]:
         specs = [
             ("sceAgcDriverGetTFRing", "libSceAgcDriver", "agc_driver_boundary", "valid_boundary", "resolved"),
             ("sceAgcDriverSubmit", "libSceAgcDriver", "agc_driver_boundary", "valid_boundary", "resolved"),
@@ -67,86 +59,33 @@ class AdversarialGenerator:
             ("!@#$%^&*()_+", None, "malformed_symbol", "special_characters", "unresolved"),
             ("sysctl_boundary_overflow_" + ("x" * 64), None, "malformed_symbol", "oversized_identifier", "unresolved"),
         ]
-        all_cases = [
-            AdversarialTestCase(
-                symbol=sym,
-                nid=nid_of(sym) if sym else 0,
-                target_library=lib,
-                category=cat,
-                mutation_type=mut,
-                expected_status=exp,
-            )
-            for sym, lib, cat, mut, exp in specs
-        ]
-
-        # Filter by category if requested
+        cases = [AdversarialTestCase(s, nid_of(s) if s else 0, lib, cat, mut, exp) for s, lib, cat, mut, exp in specs]
         if category and category != "all":
-            filtered = [c for c in all_cases if c.category == category or category in c.category]
-            if filtered:
-                return filtered[:count]
+            filtered = [c for c in cases if c.category == category or category in c.category]
+            if filtered: return filtered[:count]
+        return cases[:count]
 
-        return all_cases[:count]
-
-
-def run_stress_test(
-    resolver: ImportResolver,
-    custom_cases: Optional[List[AdversarialTestCase]] = None,
-) -> StressTestReport:
-    """Stress-test the resolver against adversarial boundary test cases.
-
-    Returns the stability score, false positive rate, category breakdown,
-    and any detected boundary vulnerabilities.
-    """
-    generator = AdversarialGenerator()
-    cases = custom_cases if custom_cases is not None else generator.generate_cases(count=50)
-
-    total = len(cases)
-    passed = 0
-    failed = 0
-    false_positives = 0
-    total_negatives = 0
-    vulnerabilities: List[str] = []
-    category_map: Dict[str, Dict[str, Any]] = {}
-
-    for case in cases:
-        cat = category_map.setdefault(
-            case.category, {"total": 0, "passed": 0, "failed": 0, "score": 100.0}
-        )
-        cat["total"] += 1
-
-        raw_imports = [ELFImport(name=case.symbol, nid=case.nid, library="", address=0)]
-        resolved_list = resolver.resolve_imports(raw_imports)
-        actual_status = resolved_list[0].status if resolved_list else "unresolved"
-
-        is_negative = case.expected_status in ("unresolved", "missing-module")
-        if is_negative:
-            total_negatives += 1
-
-        if actual_status == case.expected_status:
+def run_stress_test(resolver: ImportResolver, custom_cases: Optional[List[AdversarialTestCase]] = None) -> StressTestReport:
+    cases = custom_cases if custom_cases is not None else AdversarialGenerator().generate_cases(count=50)
+    passed, failed, fp, negs, cats, vulns = 0, 0, 0, 0, {}, []
+    for c in cases:
+        cats.setdefault(c.category, {"total": 0, "passed": 0, "failed": 0})
+        cats[c.category]["total"] += 1
+        raw = [ELFImport(name=c.symbol, nid=c.nid, library="", address=0)]
+        res_list = resolver.resolve_imports(raw)
+        act = res_list[0].status if res_list else "unresolved"
+        is_neg = c.expected_status in ("unresolved", "missing-module")
+        if is_neg: negs += 1
+        if act == c.expected_status:
             passed += 1
-            cat["passed"] += 1
+            cats[c.category]["passed"] += 1
         else:
             failed += 1
-            cat["failed"] += 1
-            vulnerabilities.append(
-                f"Symbol '{case.symbol}' expected '{case.expected_status}', got '{actual_status}'"
-            )
-            if case.expected_status == "unresolved" and actual_status == "resolved":
-                false_positives += 1
+            cats[c.category]["failed"] += 1
+            vulns.append(f"Symbol '{c.symbol}' expected '{c.expected_status}', got '{act}'")
+            if c.expected_status == "unresolved" and act == "resolved": fp += 1
 
-    stability_score = (passed / total * 100.0) if total > 0 else 100.0
-    fp_rate = (false_positives / total_negatives) if total_negatives > 0 else 0.0
-
-    for cat_data in category_map.values():
-        if cat_data["total"] > 0:
-            cat_data["score"] = round((cat_data["passed"] / cat_data["total"]) * 100.0, 1)
-
-    return StressTestReport(
-        total_cases=total,
-        passed_cases=passed,
-        failed_cases=failed,
-        stability_score=round(stability_score, 2),
-        false_positive_rate=round(fp_rate, 4),
-        category_scores=category_map,
-        vulnerabilities=vulnerabilities,
-    )
+    tot = len(cases) or 1
+    for k, v in cats.items(): v["score"] = round((v["passed"] / v["total"]) * 100.0, 1) if v["total"] else 100.0
+    fp_rate = (fp / negs) if negs > 0 else 0.0
+    return StressTestReport(len(cases), passed, failed, round(passed / tot * 100.0, 2), round(fp_rate, 4), cats, vulns)

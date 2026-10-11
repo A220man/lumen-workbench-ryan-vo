@@ -1,9 +1,8 @@
 """API route definitions for lumen-workbench-ryan-vo."""
 from __future__ import annotations
-
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -14,18 +13,14 @@ from ...models.evaluation import Evaluation
 from ...models.import_record import ImportRecord
 from ...models.audit import AuditLog
 from ...schemas.title import TitleCreate, TitleUpdate, TitleResponse
-from ...schemas.evaluation import EvaluationCreate, EvaluationResponse
+from ...schemas.evaluation import EvaluationResponse
 from ...services.import_resolver import ImportResolver
 from ...services.evaluator import run_evaluation as run_eval_metrics
 from ...services.advisory import build_advisor, explain_imports
 from ...services.adversarial import AdversarialGenerator, run_stress_test
-from ...services.shader_analyzer import (
-    RDNA2ShaderAnalyzer,
-    IRInstruction,
-    ShaderAnalysisReport,
-    RDNA2_ANCILLARY_LAYOUT,
-)
-from ...services.structurizer import CFGStructurizerAnalyzer, CFGDiagnosticReport
+from ...services.shader_analyzer import RDNA2ShaderAnalyzer, IRInstruction, RDNA2_ANCILLARY_LAYOUT
+from ...services.structurizer import CFGStructurizerAnalyzer
+from ...services.storage_writeback import StorageWritebackAnalyzer, StorageWritebackConfig, CPUWriteEvent
 from .auth import get_current_user, require_role
 
 router = APIRouter(tags=["API"])
@@ -33,19 +28,17 @@ resolver_singleton = ImportResolver()
 adversarial_generator_singleton = AdversarialGenerator()
 shader_analyzer_singleton = RDNA2ShaderAnalyzer()
 structurizer_analyzer_singleton = CFGStructurizerAnalyzer()
-
+storage_writeback_analyzer_singleton = StorageWritebackAnalyzer()
 
 class RunEvaluationRequest(BaseModel):
     title_name: Optional[str] = None
     title_id: Optional[int] = None
-
 
 class ResolvedImportItem(BaseModel):
     name: str
     nid: int
     library: Optional[str] = None
     status: str
-
 
 class ResolutionReportResponse(BaseModel):
     source_name: str
@@ -59,330 +52,111 @@ class ResolutionReportResponse(BaseModel):
     blockers: List[str]
     advisory: Optional[str] = None
 
-
-# -----------------------------------------------------------------------------
-# Titles CRUD & Search (Requires at least viewer role for GET, operator for writes)
-# -----------------------------------------------------------------------------
-
 @router.get("/titles", response_model=List[TitleResponse])
-async def list_titles(
-    search: Optional[str] = None,
-    status: Optional[str] = None,
-    page: int = 1,
-    page_size: int = 20,
-    db: Session = Depends(get_db),
-    user: Dict[str, Any] = Depends(get_current_user),
-):
-    """List titles with pagination and filtering."""
-    query = select(Title)
-    if search:
-        query = query.where(Title.name.ilike(f"%{search}%"))
-    if status:
-        query = query.where(Title.status == status)
-    return [TitleResponse.model_validate(t) for t in db.execute(query.offset((page - 1) * page_size).limit(page_size)).scalars().all()]
-
+async def list_titles(search: Optional[str] = None, status: Optional[str] = None, page: int = 1, page_size: int = 20, db: Session = Depends(get_db), user: Dict[str, Any] = Depends(get_current_user)):
+    q = select(Title)
+    if search: q = q.where(Title.name.ilike(f"%{search}%"))
+    if status: q = q.where(Title.status == status)
+    return [TitleResponse.model_validate(t) for t in db.execute(q.offset((page - 1) * page_size).limit(page_size)).scalars().all()]
 
 @router.get("/titles/{title_id}", response_model=TitleResponse)
 async def get_title(title_id: int, db: Session = Depends(get_db), user: Dict[str, Any] = Depends(get_current_user)):
-    """Get a specific title by ID."""
-    title = db.get(Title, title_id)
-    if not title:
-        raise HTTPException(status_code=404, detail="Title not found")
-    return TitleResponse.model_validate(title)
-
+    t = db.get(Title, title_id)
+    if not t: raise HTTPException(404, "Title not found")
+    return TitleResponse.model_validate(t)
 
 @router.post("/titles", response_model=TitleResponse, status_code=201)
-async def create_title(
-    title_data: TitleCreate,
-    db: Session = Depends(get_db),
-    user: Dict[str, Any] = Depends(require_role(["operator", "admin"])),
-):
-    """Create a new title (operator or admin)."""
-    title = Title(**title_data.model_dump())
-    db.add(title)
-    db.add(AuditLog(action="create_title", entity_type="title", details=f"Title created: {title_data.name} by {user.get('email')}"))
+async def create_title(data: TitleCreate, db: Session = Depends(get_db), user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
+    t = Title(**data.model_dump())
+    db.add(t)
+    db.add(AuditLog(action="create_title", entity_type="title", details=f"Title created: {data.name} by {user.get('email')}"))
     db.commit()
-    db.refresh(title)
-    return TitleResponse.model_validate(title)
-
+    db.refresh(t)
+    return TitleResponse.model_validate(t)
 
 @router.put("/titles/{title_id}", response_model=TitleResponse)
-async def update_title(
-    title_id: int,
-    title_data: TitleUpdate,
-    db: Session = Depends(get_db),
-    user: Dict[str, Any] = Depends(require_role(["operator", "admin"])),
-):
-    """Update a title (operator or admin)."""
-    title = db.get(Title, title_id)
-    if not title:
-        raise HTTPException(status_code=404, detail="Title not found")
-    for field, value in title_data.model_dump(exclude_unset=True).items():
-        setattr(title, field, value)
+async def update_title(title_id: int, data: TitleUpdate, db: Session = Depends(get_db), user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
+    t = db.get(Title, title_id)
+    if not t: raise HTTPException(404, "Title not found")
+    for f, v in data.model_dump(exclude_unset=True).items(): setattr(t, f, v)
     db.add(AuditLog(action="update_title", entity_type="title", entity_id=title_id, details=f"Title updated by {user.get('email')}"))
     db.commit()
-    db.refresh(title)
-    return TitleResponse.model_validate(title)
-
+    db.refresh(t)
+    return TitleResponse.model_validate(t)
 
 @router.delete("/titles/{title_id}", status_code=204)
-async def delete_title(
-    title_id: int,
-    db: Session = Depends(get_db),
-    user: Dict[str, Any] = Depends(require_role(["admin"])),
-):
-    """Delete a title (admin only)."""
-    title = db.get(Title, title_id)
-    if not title:
-        raise HTTPException(status_code=404, detail="Title not found")
+async def delete_title(title_id: int, db: Session = Depends(get_db), user: Dict[str, Any] = Depends(require_role(["admin"]))):
+    t = db.get(Title, title_id)
+    if not t: raise HTTPException(404, "Title not found")
     db.add(AuditLog(action="delete_title", entity_type="title", entity_id=title_id, details=f"Title deleted by {user.get('email')}"))
-    db.delete(title)
+    db.delete(t)
     db.commit()
     return None
 
-
-# -----------------------------------------------------------------------------
-# Domain Workflow 1: PS5 ELF Import Resolver & Analysis
-# -----------------------------------------------------------------------------
-
 @router.post("/imports/analyze", response_model=ResolutionReportResponse)
-async def analyze_imports(
-    file: UploadFile = File(...),
-    explain: bool = False,
-    db: Session = Depends(get_db),
-    user: Dict[str, Any] = Depends(get_current_user),
-):
-    """Parse and resolve ELF imports from uploaded binary data.
-
-    Executes deterministic resolution against host library export database.
-    Optionally requests opt-in advisory explanation.
-    """
+async def analyze_imports(file: UploadFile = File(...), explain: bool = False, db: Session = Depends(get_db), user: Dict[str, Any] = Depends(get_current_user)):
     content = await file.read()
-    if not content:
-        raise HTTPException(status_code=400, detail="Empty file uploaded")
-    
-    report = resolver_singleton.analyze_bytes(content, source_name=file.filename or "upload.elf")
-    
-    advisory_text: Optional[str] = None
-    if explain:
-        advisor = build_advisor()
-        advisory_text = await explain_imports(report, advisor)
-    
-    # Persist import analysis record
-    rec = ImportRecord(
-        title_name=file.filename or "unknown.elf",
-        status="complete" if report.score >= 50 else "needs_stubs",
-        analyzed_by=user.get("email"),
-        analysis_result=f"score={report.score}, coverage={report.coverage:.2f}, resolved={report.resolved_count}",
-    )
+    if not content: raise HTTPException(400, "Empty file uploaded")
+    rep = resolver_singleton.analyze_bytes(content, source_name=file.filename or "upload.elf")
+    adv = await explain_imports(rep, build_advisor()) if explain else None
+    rec = ImportRecord(title_name=file.filename or "unknown.elf", status="complete" if rep.score >= 50 else "needs_stubs", analyzed_by=user.get("email"), analysis_result=f"score={rep.score}, coverage={rep.coverage:.2f}, resolved={rep.resolved_count}")
     db.add(rec)
     db.commit()
-
-    return ResolutionReportResponse(
-        source_name=report.source_name,
-        needed_libraries=report.needed_libraries,
-        imports=[ResolvedImportItem(name=i.name, nid=i.nid, library=i.library, status=i.status) for i in report.imports],
-        resolved_count=report.resolved_count,
-        unresolved_count=report.unresolved_count,
-        missing_module_count=report.missing_module_count,
-        coverage=report.coverage,
-        score=report.score,
-        blockers=report.blockers,
-        advisory=advisory_text,
-    )
-
-
-# -----------------------------------------------------------------------------
-# Domain Workflow 2: Labeled Evaluation Dataset & Benchmark
-# -----------------------------------------------------------------------------
+    return ResolutionReportResponse(source_name=rep.source_name, needed_libraries=rep.needed_libraries, imports=[ResolvedImportItem(name=i.name, nid=i.nid, library=i.library, status=i.status) for i in rep.imports], resolved_count=rep.resolved_count, unresolved_count=rep.unresolved_count, missing_module_count=rep.missing_module_count, coverage=rep.coverage, score=rep.score, blockers=rep.blockers, advisory=adv)
 
 @router.get("/evaluations", response_model=List[EvaluationResponse])
-async def list_evaluations(
-    db: Session = Depends(get_db),
-    user: Dict[str, Any] = Depends(get_current_user),
-):
-    """List historical evaluations."""
-    evals = db.execute(select(Evaluation)).scalars().all()
-    return [EvaluationResponse.model_validate(e) for e in evals]
-
+async def list_evaluations(db: Session = Depends(get_db), user: Dict[str, Any] = Depends(get_current_user)):
+    return [EvaluationResponse.model_validate(e) for e in db.execute(select(Evaluation)).scalars().all()]
 
 @router.post("/evaluations/run")
-async def run_evaluation_endpoint(
-    req: RunEvaluationRequest,
-    db: Session = Depends(get_db),
-    user: Dict[str, Any] = Depends(require_role(["operator", "admin"])),
-):
-    """Run import resolver benchmark against the labeled dataset."""
-    metrics = run_eval_metrics(resolver_singleton)
-    
-    # Record evaluation record if title provided
-    if req.title_id:
-        title = db.get(Title, req.title_id)
-        if title:
-            eval_record = Evaluation(
-                title_id=title.id,
-                score=round(metrics.f1 * 10, 2),
-                comments=f"F1={metrics.f1:.3f}, Precision={metrics.precision:.3f}, Recall={metrics.recall:.3f}",
-            )
-            db.add(eval_record)
-            db.commit()
-
-    return {
-        "status": "success",
-        "precision": metrics.precision,
-        "recall": metrics.recall,
-        "f1": metrics.f1,
-        "coverage": metrics.coverage,
-        "true_positive": metrics.true_positive,
-        "false_positive": metrics.false_positive,
-        "false_negative": metrics.false_negative,
-        "per_library": metrics.per_library,
-    }
-
-
-# -----------------------------------------------------------------------------
-# Domain Workflow 3: Adversarial ELF Test Case Generator & Stress Testing
-# -----------------------------------------------------------------------------
+async def run_evaluation_endpoint(req: RunEvaluationRequest, db: Session = Depends(get_db), user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
+    m = run_eval_metrics(resolver_singleton)
+    if req.title_id and (t := db.get(Title, req.title_id)):
+        db.add(Evaluation(title_id=t.id, score=round(m.f1 * 10, 2), comments=f"F1={m.f1:.3f}, Precision={m.precision:.3f}, Recall={m.recall:.3f}"))
+        db.commit()
+    return {"status": "success", "precision": m.precision, "recall": m.recall, "f1": m.f1, "coverage": m.coverage, "true_positive": m.true_positive, "false_positive": m.false_positive, "false_negative": m.false_negative, "per_library": m.per_library}
 
 @router.post("/adversarial/generate")
-async def generate_adversarial_spec(
-    prefix: Optional[str] = None,
-    category: Optional[str] = None,
-    count: int = 5,
-    user: Dict[str, Any] = Depends(require_role(["operator", "admin"])),
-):
-    """Generate synthetic boundary test cases to probe resolver behavior."""
+async def generate_adversarial_spec(prefix: Optional[str] = None, category: Optional[str] = None, count: int = 5, user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
     if prefix:
-        items = [{
-            "name": f"{prefix}_adversarial_sym_{i}",
-            "nid": nid_of(f"{prefix}_adversarial_sym_{i}"),
-            "predicted_status": "unresolved" if not resolver_singleton.resolve_name(f"{prefix}_adversarial_sym_{i}") else "resolved",
-            "category": category or "prefix_boundary",
-        } for i in range(min(max(count, 1), 50))]
+        items = [{"name": f"{prefix}_adversarial_sym_{i}", "nid": nid_of(f"{prefix}_adversarial_sym_{i}"), "predicted_status": "unresolved" if not resolver_singleton.resolve_name(f"{prefix}_adversarial_sym_{i}") else "resolved", "category": category or "prefix_boundary"} for i in range(min(max(count, 1), 50))]
     else:
-        items = [{
-            "name": c.symbol,
-            "nid": c.nid,
-            "predicted_status": c.expected_status,
-            "category": c.category,
-            "mutation_type": c.mutation_type,
-        } for c in adversarial_generator_singleton.generate_cases(category=category, count=count)]
+        items = [{"name": c.symbol, "nid": c.nid, "predicted_status": c.expected_status, "category": c.category, "mutation_type": c.mutation_type} for c in adversarial_generator_singleton.generate_cases(category=category, count=count)]
     return {"generated_count": len(items), "symbols": items}
 
-
 @router.post("/adversarial/stress-test")
-async def run_adversarial_stress_test(
-    category: Optional[str] = None,
-    user: Dict[str, Any] = Depends(require_role(["operator", "admin"])),
-):
-    """Run stress test against host export boundaries and report stability score."""
-    cases = adversarial_generator_singleton.generate_cases(category=category, count=50)
-    report = run_stress_test(resolver_singleton, custom_cases=cases)
+async def run_adversarial_stress_test(category: Optional[str] = None, user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
+    rep = run_stress_test(resolver_singleton, custom_cases=adversarial_generator_singleton.generate_cases(category=category, count=50))
+    return {"status": "success", "total_cases": rep.total_cases, "passed_cases": rep.passed_cases, "failed_cases": rep.failed_cases, "stability_score": rep.stability_score, "false_positive_rate": rep.false_positive_rate, "category_scores": rep.category_scores, "vulnerabilities": rep.vulnerabilities}
+
+@router.get("/stats")
+async def get_system_stats(db: Session = Depends(get_db), user: Dict[str, Any] = Depends(get_current_user)):
+    active = db.execute(select(func.count(Title.id)).where(Title.status == "active")).scalar() or 0
+    total = db.execute(select(func.count(ImportRecord.id))).scalar() or 0
+    evals = db.execute(select(func.count(Evaluation.id))).scalar() or 0
+    m = run_eval_metrics(resolver_singleton)
+    return {"active_titles": active, "total_imports": total, "resolution_rate": f"{m.coverage * 100:.1f}%", "evaluation_count": evals}
+
+@router.get("/analytics")
+async def get_analytics(db: Session = Depends(get_db), user: Dict[str, Any] = Depends(get_current_user)):
+    m = run_eval_metrics(resolver_singleton)
+    stress = run_stress_test(resolver_singleton)
+    stray = shader_analyzer_singleton.get_stray_catalog_shaders()
+    cfg = structurizer_analyzer_singleton.analyze_cfg("issue_2642_repro", structurizer_analyzer_singleton.get_issue_2642_graph())
+    swb = storage_writeback_analyzer_singleton.analyze()
+    top_lib = max(m.per_library.items(), key=lambda x: x[1].get("tp", 0))[0] if m.per_library else "libkernel"
+    total = db.execute(select(func.count(ImportRecord.id))).scalar() or 0
     return {
-        "status": "success",
-        "total_cases": report.total_cases,
-        "passed_cases": report.passed_cases,
-        "failed_cases": report.failed_cases,
-        "stability_score": report.stability_score,
-        "false_positive_rate": report.false_positive_rate,
-        "category_scores": report.category_scores,
-        "vulnerabilities": report.vulnerabilities,
+        "resolution_by_library": f"Lead module: {top_lib} ({m.per_library.get(top_lib, {}).get('tp', 0)} symbols)",
+        "performance_trend": f"F1={m.f1:.3f} (coverage {m.coverage * 100:.1f}%)",
+        "import_volume": f"{total} records analyzed",
+        "per_library": m.per_library,
+        "metrics": {"precision": round(m.precision, 4), "recall": round(m.recall, 4), "f1": round(m.f1, 4), "coverage": round(m.coverage, 4), "stability_score": round(stress.stability_score, 2)},
+        "adversarial_stability": f"{stress.stability_score:.1f}% stability ({stress.passed_cases}/{stress.total_cases} boundary probes)",
+        "shader_diagnostics": f"{sum(1 for s in stray if s.status == 'rejected_unsupported_live_use')}/{len(stray)} Stray UE4 shaders deferred (issue #2548 unsupported live use)",
+        "structurizer_diagnostics": f"Issue #2642 repro: {cfg.status} ({cfg.current_blocks}/{cfg.original_blocks} blocks, budget {cfg.split_budget})",
+        "storage_writeback_diagnostics": f"Silksong (issue #865): {swb.status} ({len(swb.block_policy_dropped_units)} 64K edge drops vs 0 at 4K page granularity)",
     }
-
-
-# -----------------------------------------------------------------------------
-# System Status & Telemetry Analytics
-# -----------------------------------------------------------------------------
-
-class StatsResponse(BaseModel):
-    active_titles: int
-    total_imports: int
-    resolution_rate: str
-    evaluation_count: int
-
-
-class AnalyticsResponse(BaseModel):
-    resolution_by_library: str
-    performance_trend: str
-    import_volume: str
-    per_library: Dict[str, Dict[str, int]]
-    metrics: Dict[str, float]
-    adversarial_stability: Optional[str] = None
-    shader_diagnostics: Optional[str] = None
-    structurizer_diagnostics: Optional[str] = None
-
-
-@router.get("/stats", response_model=StatsResponse)
-async def get_system_stats(
-    db: Session = Depends(get_db),
-    user: Dict[str, Any] = Depends(get_current_user),
-):
-    """Retrieve system status metrics."""
-    active_titles = db.execute(
-        select(func.count(Title.id)).where(Title.status == "active")
-    ).scalar() or 0
-
-    total_imports = db.execute(
-        select(func.count(ImportRecord.id))
-    ).scalar() or 0
-
-    eval_count = db.execute(
-        select(func.count(Evaluation.id))
-    ).scalar() or 0
-
-    metrics = run_eval_metrics(resolver_singleton)
-    res_rate_pct = f"{metrics.coverage * 100:.1f}%"
-
-    return StatsResponse(
-        active_titles=active_titles,
-        total_imports=total_imports,
-        resolution_rate=res_rate_pct,
-        evaluation_count=eval_count,
-    )
-
-
-@router.get("/analytics", response_model=AnalyticsResponse)
-async def get_analytics(
-    db: Session = Depends(get_db),
-    user: Dict[str, Any] = Depends(get_current_user),
-):
-    """Retrieve resolution analytics and benchmark metrics."""
-    metrics = run_eval_metrics(resolver_singleton)
-    stress_report = run_stress_test(resolver_singleton)
-    stray_shaders = shader_analyzer_singleton.get_stray_catalog_shaders()
-    deferred_count = sum(1 for s in stray_shaders if s.status == "rejected_unsupported_live_use")
-    cfg_report = structurizer_analyzer_singleton.analyze_cfg(
-        "issue_2642_repro",
-        structurizer_analyzer_singleton.get_issue_2642_graph(),
-    )
-    top_lib = (
-        max(metrics.per_library.items(), key=lambda x: x[1].get("tp", 0))[0]
-        if metrics.per_library
-        else "libkernel"
-    )
-    total_imports = db.execute(select(func.count(ImportRecord.id))).scalar() or 0
-
-    return AnalyticsResponse(
-        resolution_by_library=f"Lead module: {top_lib} ({metrics.per_library.get(top_lib, {}).get('tp', 0)} symbols)",
-        performance_trend=f"F1={metrics.f1:.3f} (coverage {metrics.coverage * 100:.1f}%)",
-        import_volume=f"{total_imports} records analyzed",
-        per_library=metrics.per_library,
-        metrics={
-            "precision": round(metrics.precision, 4),
-            "recall": round(metrics.recall, 4),
-            "f1": round(metrics.f1, 4),
-            "coverage": round(metrics.coverage, 4),
-            "stability_score": round(stress_report.stability_score, 2),
-        },
-        adversarial_stability=f"{stress_report.stability_score:.1f}% stability ({stress_report.passed_cases}/{stress_report.total_cases} boundary probes)",
-        shader_diagnostics=f"{deferred_count}/{len(stray_shaders)} Stray UE4 shaders deferred (issue #2548 unsupported live use)",
-        structurizer_diagnostics=f"Issue #2642 repro: {cfg_report.status} ({cfg_report.current_blocks}/{cfg_report.original_blocks} blocks, budget {cfg_report.split_budget})",
-    )
-
-
-# -----------------------------------------------------------------------------
-# Shader Recompiler Diagnostics (Issue #2548)
-# -----------------------------------------------------------------------------
 
 class ShaderAnalyzeInstruction(BaseModel):
     index: int
@@ -393,7 +167,6 @@ class ShaderAnalyzeInstruction(BaseModel):
     bit_length: Optional[int] = None
     condition: Optional[str] = None
 
-
 class ShaderAnalyzeRequest(BaseModel):
     shader_address: str = "0x200e370000"
     title_id: str = "PPSA02100"
@@ -401,144 +174,72 @@ class ShaderAnalyzeRequest(BaseModel):
     instructions: Optional[List[ShaderAnalyzeInstruction]] = None
     raw_word: Optional[int] = None
 
+@router.get("/shaders/rdna2-layout")
+async def get_rdna2_layout(user: Dict[str, Any] = Depends(get_current_user)):
+    return [b.__dict__ for b in RDNA2_ANCILLARY_LAYOUT]
 
-class BitfieldLayoutItem(BaseModel):
-    name: str
-    offset: int
-    length: int
-    modeled: bool
-    source_builtin: Optional[str] = None
-    description: str
+@router.post("/shaders/analyze")
+async def analyze_shader(payload: ShaderAnalyzeRequest, user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
+    insts = [IRInstruction(i.index, i.opcode, i.dest, i.sources, i.bit_offset, i.bit_length, i.condition) for i in (payload.instructions or [])]
+    rep = shader_analyzer_singleton.analyze_ir_stream(payload.shader_address, payload.title_id, insts, payload.ancillary_vgpr)
+    dec = shader_analyzer_singleton.decode_word(payload.raw_word) if payload.raw_word is not None else None
+    res = rep.__dict__.copy()
+    res["decoded_word"] = dec
+    return res
 
-
-class ShaderAnalysisResponse(BaseModel):
-    shader_address: str
-    title_id: str
-    ancillary_vgpr: str
-    has_ancillary_access: bool
-    extracted_fields: List[str]
-    register_reused: bool
-    live_use_chain: List[str]
-    unsupported_bit_access: bool
-    rebuildable_pr1179: bool
-    rejection_reason: Optional[str] = None
-    status: str
-    decoded_word: Optional[Dict[str, Any]] = None
-
-
-@router.get("/shaders/rdna2-layout", response_model=List[BitfieldLayoutItem])
-async def get_rdna2_layout(
-    user: Dict[str, Any] = Depends(get_current_user),
-):
-    """Retrieve RDNA2 packed pixel ancillary VGPR bitfield specification."""
-    return [BitfieldLayoutItem(**b.__dict__) for b in RDNA2_ANCILLARY_LAYOUT]
-
-
-@router.post("/shaders/analyze", response_model=ShaderAnalysisResponse)
-async def analyze_shader(
-    payload: ShaderAnalyzeRequest,
-    user: Dict[str, Any] = Depends(require_role(["operator", "admin"])),
-):
-    """Analyze shader instruction stream for RDNA2 ancillary register reuse and bitfield extraction."""
-    insts = [
-        IRInstruction(
-            index=i.index,
-            opcode=i.opcode,
-            dest=i.dest,
-            sources=i.sources,
-            bit_offset=i.bit_offset,
-            bit_length=i.bit_length,
-            condition=i.condition,
-        )
-        for i in (payload.instructions or [])
-    ]
-    report = shader_analyzer_singleton.analyze_ir_stream(
-        shader_address=payload.shader_address,
-        title_id=payload.title_id,
-        instructions=insts,
-        ancillary_vgpr=payload.ancillary_vgpr,
-    )
-    decoded = shader_analyzer_singleton.decode_word(payload.raw_word) if payload.raw_word is not None else None
-    return ShaderAnalysisResponse(**report.__dict__, decoded_word=decoded)
-
-
-@router.get("/shaders/stray-batch", response_model=List[ShaderAnalysisResponse])
-async def get_stray_shaders_batch(
-    user: Dict[str, Any] = Depends(get_current_user),
-):
-    """Retrieve recompiler analysis for Stray (PPSA02100 v1.05) UE4 pixel shaders (issue #2548)."""
-    return [
-        ShaderAnalysisResponse(**r.__dict__, decoded_word=None)
-        for r in shader_analyzer_singleton.get_stray_catalog_shaders()
-    ]
-
-
-# -----------------------------------------------------------------------------
-# Structurizer Diagnostics (Issue #2642)
-# -----------------------------------------------------------------------------
+@router.get("/shaders/stray-batch")
+async def get_stray_shaders_batch(user: Dict[str, Any] = Depends(get_current_user)):
+    return [r.__dict__ for r in shader_analyzer_singleton.get_stray_catalog_shaders()]
 
 class CFGAnalyzeRequest(BaseModel):
     name: str = "custom_cfg"
     adjacency: List[List[int]]
     split_budget: Optional[int] = None
 
+@router.post("/structurizer/analyze")
+async def analyze_cfg(payload: CFGAnalyzeRequest, user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
+    return structurizer_analyzer_singleton.analyze_cfg(payload.name, payload.adjacency, payload.split_budget).__dict__
 
-class CFGDiagnosticResponse(BaseModel):
-    name: str
-    original_blocks: int
-    current_blocks: int
-    split_budget: int
-    exceeded_budget: bool
-    multi_latch_loops: List[Dict[str, Any]]
-    selection_conflicts: List[Dict[str, Any]]
-    synthetic_chain_steps: List[str]
-    infinite_recursion_detected: bool
-    root_cause: Optional[str] = None
-    recommendation: Optional[str] = None
-    matches_issue_2642: bool
-    status: str
-
-
-class CFGPresetItem(BaseModel):
-    id: str
-    name: str
-    description: str
-    adjacency: List[List[int]]
-    expected_status: str
-
-
-@router.post("/structurizer/analyze", response_model=CFGDiagnosticResponse)
-async def analyze_cfg(
-    payload: CFGAnalyzeRequest,
-    user: Dict[str, Any] = Depends(require_role(["operator", "admin"])),
-):
-    """Analyze shader control-flow graph for shared merge splitting budget exhaustion (issue #2642)."""
-    report = structurizer_analyzer_singleton.analyze_cfg(
-        name=payload.name,
-        adj=payload.adjacency,
-        custom_split_budget=payload.split_budget,
-    )
-    return CFGDiagnosticResponse(**report.__dict__)
-
-
-@router.get("/structurizer/presets", response_model=List[CFGPresetItem])
-async def get_structurizer_presets(
-    user: Dict[str, Any] = Depends(get_current_user),
-):
-    """Retrieve preset CFG test shapes including issue #2642 reproduction graph."""
+@router.get("/structurizer/presets")
+async def get_structurizer_presets(user: Dict[str, Any] = Depends(get_current_user)):
     return [
-        CFGPresetItem(
-            id="issue-2642-repro",
-            name="Issue #2642 Minimal Reproduction",
-            description="Two-latch loop (latches 4 and 5) with nested selections (headers 2 and 3) sharing join block 4",
-            adjacency=structurizer_analyzer_singleton.get_issue_2642_graph(),
-            expected_status="budget_exceeded",
-        ),
-        CFGPresetItem(
-            id="clean-baseline",
-            name="Clean Structured Baseline",
-            description="Single-latch reducible CFG with structured branch-join diamond",
-            adjacency=structurizer_analyzer_singleton.get_clean_baseline_graph(),
-            expected_status="clean",
-        ),
+        {"id": "issue-2642-repro", "name": "Issue #2642 Minimal Reproduction", "description": "Two-latch loop with nested selections sharing join block 4", "adjacency": structurizer_analyzer_singleton.get_issue_2642_graph(), "expected_status": "budget_exceeded"},
+        {"id": "clean-baseline", "name": "Clean Structured Baseline", "description": "Single-latch reducible CFG with structured diamond", "adjacency": structurizer_analyzer_singleton.get_clean_baseline_graph(), "expected_status": "clean"},
+    ]
+
+class CPUWriteEventItem(BaseModel):
+    address: int
+    size_bytes: int
+    generation: int
+    description: str
+
+class StorageSimulateRequest(BaseModel):
+    title_id: str = "PPSA12544"
+    title_name: str = "Hollow Knight: Silksong (Unity TextCore)"
+    texture_address: int = 0x25E042000
+    texture_size: int = 0x40000
+    block_size: int = 65536
+    page_size: int = 4096
+    gpu_dispatch_generation: int = 87617
+    cpu_writes: Optional[List[CPUWriteEventItem]] = None
+
+@router.post("/storage-writeback/simulate")
+async def simulate_storage_writeback(payload: StorageSimulateRequest, user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
+    cfg = StorageWritebackConfig(payload.title_id, payload.title_name, payload.texture_address, payload.texture_size, payload.block_size, payload.page_size, payload.gpu_dispatch_generation)
+    writes = [CPUWriteEvent(w.address, w.size_bytes, w.generation, w.description) for w in payload.cpu_writes] if payload.cpu_writes is not None else None
+    rep = storage_writeback_analyzer_singleton.analyze(cfg, writes)
+    return {
+        "title_id": rep.title_id, "title_name": rep.title_name, "texture_address": hex(rep.texture_address), "texture_size": hex(rep.texture_size),
+        "alignment_offset": hex(rep.alignment_offset), "total_blocks_spanned": rep.total_blocks_spanned, "total_pages_spanned": rep.total_pages_spanned,
+        "edge_blocks_count": rep.edge_blocks_count, "block_policy_corrupted": rep.block_policy_corrupted, "block_policy_dropped_units": rep.block_policy_dropped_units,
+        "page_policy_corrupted": rep.page_policy_corrupted, "page_policy_dropped_units": rep.page_policy_dropped_units, "eager_writeback_corrupted": rep.eager_writeback_corrupted,
+        "corrupted_glyphs": rep.corrupted_glyphs, "warning_logged": rep.warning_logged, "root_cause": rep.root_cause, "recommendation": rep.recommendation,
+        "status": rep.status, "units": [u.__dict__ for u in rep.units],
+    }
+
+@router.get("/storage-writeback/presets")
+async def get_storage_writeback_presets(user: Dict[str, Any] = Depends(get_current_user)):
+    return [
+        {"id": "silksong-sdf-atlas", "name": "Silksong SDF Font Atlas (Issue #865)", "description": "Unaligned 512x512 R8 texture at 0x25e042000 dropped by 64 KiB block StoredOver", "texture_address": 0x25E042000, "texture_size": 0x40000, "expected_status": "conflict_detected"},
+        {"id": "aligned-baseline", "name": "Aligned 64 KiB Texture Baseline", "description": "64 KiB aligned texture with no adjacent sharing allocations", "texture_address": 0x25E040000, "texture_size": 0x40000, "expected_status": "clean"},
     ]

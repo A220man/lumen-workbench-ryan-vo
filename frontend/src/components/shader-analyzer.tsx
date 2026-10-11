@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { useAuth } from "../hooks"
 import {
-  apiClient,
   BitfieldLayoutItem,
   ShaderAnalysisResponse,
   getRDNA2Layout,
@@ -23,10 +22,7 @@ export const ShaderAnalyzerPanel: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const [layoutData, batchData] = await Promise.all([
-          getRDNA2Layout(),
-          getStrayShadersBatch(),
-        ])
+        const [layoutData, batchData] = await Promise.all([getRDNA2Layout(), getStrayShadersBatch()])
         setLayout(layoutData)
         setStrayShaders(batchData)
         setError(null)
@@ -36,12 +32,8 @@ export const ShaderAnalyzerPanel: React.FC = () => {
         setLoading(false)
       }
     }
-
-    if (checkRole("viewer")) {
-      fetchData()
-    } else {
-      setLoading(false)
-    }
+    if (checkRole("viewer")) fetchData()
+    else setLoading(false)
   }, [checkRole])
 
   const handleRebuildAndDecode = async () => {
@@ -63,28 +55,20 @@ export const ShaderAnalyzerPanel: React.FC = () => {
     }
   }
 
-  if (loading) {
-    return <div className="p-6 text-center text-gray-500 animate-pulse">Loading shader diagnostics...</div>
-  }
-
-  if (error) {
-    return <div className="p-6 text-center text-red-500">Error: {error}</div>
-  }
+  if (loading) return <div className="p-6 text-center text-gray-500 animate-pulse">Loading shader diagnostics...</div>
+  if (error) return <div className="p-6 text-center text-red-500">Error: {error}</div>
 
   const rawReconstructed = ((sampleId & 0xf) << 8) | ((layer & 0x7ff) << 16)
 
   return (
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
-          RDNA2 Shader Recompiler Diagnostics (Issue #2548)
-        </h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">RDNA2 Shader Recompiler Diagnostics (Issue #2548)</h2>
         <p className="text-sm text-gray-600 mb-4">
           Models RDNA2 packed pixel ancillary register bitfield extraction (render target index and
           sample index) and detects register reuse patterns triggering unsupported live use errors in UE4 shaders.
         </p>
 
-        {/* Bitfield Layout Specification */}
         <div className="mt-4">
           <h3 className="text-md font-semibold text-gray-800 mb-2">RDNA2 Ancillary Register (v4) Bit Layout</h3>
           <div className="overflow-x-auto">
@@ -103,15 +87,9 @@ export const ShaderAnalyzerPanel: React.FC = () => {
                     <td className="px-4 py-2 text-gray-600">[{item.offset}..{item.offset + item.length - 1}]</td>
                     <td className="px-4 py-2 text-gray-600">{item.length} bits</td>
                     <td className="px-4 py-2">
-                      {item.modeled ? (
-                        <span className="px-2 py-0.5 text-xs rounded bg-green-100 text-green-800 font-medium">
-                          Modelled (PR #1179)
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 text-xs rounded bg-amber-100 text-amber-800 font-medium">
-                          Unmodelled
-                        </span>
-                      )}
+                      <span className={`px-2 py-0.5 text-xs rounded font-medium ${item.modeled ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
+                        {item.modeled ? "Modelled (PR #1179)" : "Unmodelled"}
+                      </span>
                     </td>
                     <td className="px-4 py-2 text-gray-600 font-mono text-xs">{item.source_builtin || "None"}</td>
                   </tr>
@@ -122,47 +100,25 @@ export const ShaderAnalyzerPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* Interactive Word Reconstruction & Decoder */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-4">
         <h3 className="text-md font-semibold text-gray-800">Interactive PR #1179 Bitfield Reconstruction</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-700">Sample Index (0-15)</label>
-            <input
-              type="number"
-              min={0}
-              max={15}
-              value={sampleId}
-              onChange={(e) => setSampleId(Number(e.target.value))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm p-2 border"
-            />
+            <input type="number" min={0} max={15} value={sampleId} onChange={(e) => setSampleId(Number(e.target.value))} className="mt-1 block w-full rounded border p-2 text-sm" />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-700">Render Target Layer (0-2047)</label>
-            <input
-              type="number"
-              min={0}
-              max={2047}
-              value={layer}
-              onChange={(e) => setLayer(Number(e.target.value))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm p-2 border"
-            />
+            <input type="number" min={0} max={2047} value={layer} onChange={(e) => setLayer(Number(e.target.value))} className="mt-1 block w-full rounded border p-2 text-sm" />
           </div>
           <div className="flex items-end">
-            <button
-              onClick={handleRebuildAndDecode}
-              className="w-full bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 font-medium"
-            >
-              Reconstruct & Decode
-            </button>
+            <button onClick={handleRebuildAndDecode} className="w-full bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 font-medium">Reconstruct & Decode</button>
           </div>
         </div>
 
         <div className="p-3 bg-gray-50 rounded border text-sm font-mono flex items-center justify-between">
           <span>Reconstructed Ancillary Word:</span>
-          <span className="font-bold text-blue-700">
-            0x{rawReconstructed.toString(16).padStart(8, "0").toUpperCase()}
-          </span>
+          <span className="font-bold text-blue-700">0x{rawReconstructed.toString(16).padStart(8, "0").toUpperCase()}</span>
         </div>
 
         {decodedResult?.decoded_word && (
@@ -175,35 +131,26 @@ export const ShaderAnalyzerPanel: React.FC = () => {
         )}
       </div>
 
-      {/* Stray (PPSA02100) Catalog Shaders Diagnostics */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-md font-semibold text-gray-800">
-            Stray (PPSA02100 v1.05) UE4 Pixel Shaders ({strayShaders.length})
-          </h3>
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-            Deferred on Issue #2548
-          </span>
+          <h3 className="text-md font-semibold text-gray-800">Stray (PPSA02100 v1.05) UE4 Pixel Shaders ({strayShaders.length})</h3>
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">Deferred on Issue #2548</span>
         </div>
         <p className="text-xs text-gray-600 mb-3">
           All 26 shaders extract render target index via <code className="bg-gray-100 px-1">v_bfe_u32</code> and later reuse v4
           in <code className="bg-gray-100 px-1">SelectU32(HelperInvocation, ...)</code>, propagating the raw word whole into downstream attributes.
         </p>
         <div className="max-h-64 overflow-y-auto divide-y divide-gray-100 border rounded">
-          {strayShaders.map((shader) => (
-            <div key={shader.shader_address} className="p-3 text-xs flex items-center justify-between hover:bg-gray-50">
+          {strayShaders.map((s) => (
+            <div key={s.shader_address} className="p-3 text-xs flex items-center justify-between hover:bg-gray-50">
               <div>
-                <span className="font-mono font-bold text-gray-900">{shader.shader_address}</span>
-                <span className="ml-2 text-gray-500 font-mono">VGPR: {shader.ancillary_vgpr}</span>
-                <p className="text-red-600 mt-0.5">{shader.rejection_reason}</p>
+                <span className="font-mono font-bold text-gray-900">{s.shader_address}</span>
+                <span className="ml-2 text-gray-500 font-mono">VGPR: {s.ancillary_vgpr}</span>
+                <p className="text-red-600 mt-0.5">{s.rejection_reason}</p>
               </div>
               <div className="text-right">
-                <span className="px-2 py-0.5 rounded text-xs bg-red-50 text-red-700 font-medium">
-                  {shader.status}
-                </span>
-                <p className="text-gray-400 text-[10px] mt-0.5">
-                  Flow: {shader.live_use_chain.slice(0, 3).join(" → ")}...
-                </p>
+                <span className="px-2 py-0.5 rounded text-xs bg-red-50 text-red-700 font-medium">{s.status}</span>
+                <p className="text-gray-400 text-[10px] mt-0.5">Flow: {s.live_use_chain.slice(0, 3).join(" → ")}...</p>
               </div>
             </div>
           ))}

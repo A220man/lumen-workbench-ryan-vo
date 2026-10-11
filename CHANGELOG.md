@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.6.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
+## 1.6.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
+### Added
+- **Storage Texture Write-Back Diagnostics**: Implemented `StorageWritebackAnalyzer` in `backend/services/storage_writeback.py` modeling GPU storage texture write-back cache, 64 KiB block vs 4 KiB page granularity conflict detection (`StoredOver`), CPU stamp generation tracking, and eager write-back policy simulation reproducing AnyPS5 issue #865 (Silksong PPSA12544 SDF font atlas edge block corruption).
+- **Storage Write-Back Endpoints**: Added `POST /api/v1/storage-writeback/simulate` and `GET /api/v1/storage-writeback/presets` providing write-back diagnostic reports, edge block dropped units analysis, and presets (`silksong-sdf-atlas` and `aligned-baseline`).
+- **Frontend Storage Writeback UI**: Added `StorageWritebackPanel` (`frontend/src/components/storage-writeback.tsx`) with preset selection, real-time cache conflict simulation, 64 KiB block vs 4 KiB page policy comparison, driver warning displays, and root-cause/recommendation panels.
+- **Unit & Integration Tests**: Added 5 backend tests (45 pytest tests total) and 2 frontend vitest tests (17 vitest tests total) covering storage write-back conflict detection, 4 KiB page granularity preservation, aligned baseline, API endpoints, and UI interaction.
+
 ## 1.5.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
