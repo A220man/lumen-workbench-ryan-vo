@@ -8,7 +8,7 @@ export interface ImportRecord { id: number; title_name: string; version: string 
 export interface EvaluationRecord { id: number; title_id: number; score: number; comments: string | null; created_at: string; updated_at: string }
 export interface ResolutionReport { source_name: string; needed_libraries: string[]; imports: Array<{ name: string; nid: number; library: string | null; status: string }>; resolved_count: number; unresolved_count: number; missing_module_count: number; coverage: number; score: number; blockers: string[] }
 export interface SystemStats { active_titles: number; total_imports: number; resolution_rate: string; evaluation_count: number }
-export interface AnalyticsData { resolution_by_library: string; performance_trend: string; import_volume: string; per_library: Record<string, { tp: number; fp: number; fn: number }>; metrics: { precision: number; recall: number; f1: number; coverage: number; stability_score?: number }; adversarial_stability?: string; shader_diagnostics?: string; structurizer_diagnostics?: string; storage_writeback_diagnostics?: string; intel_gpu_diagnostics?: string }
+export interface AnalyticsData { resolution_by_library: string; performance_trend: string; import_volume: string; per_library: Record<string, { tp: number; fp: number; fn: number }>; metrics: { precision: number; recall: number; f1: number; coverage: number; stability_score?: number }; adversarial_stability?: string; shader_diagnostics?: string; structurizer_diagnostics?: string; storage_writeback_diagnostics?: string }
 export interface AdversarialSymbol { name: string; nid: number; predicted_status: string; category?: string; mutation_type?: string }
 export interface AdversarialGenerationResponse { generated_count: number; symbols: AdversarialSymbol[] }
 export interface StressTestResult { status: string; total_cases: number; passed_cases: number; failed_cases: number; stability_score: number; false_positive_rate: number; category_scores: Record<string, any>; vulnerabilities: string[] }
@@ -44,9 +44,3 @@ export interface StoragePresetItem { id: string; name: string; texture_address: 
 export const getStorageWritebackPresets = async (): Promise<StoragePresetItem[]> => (await api.get("/storage-writeback/presets")).data
 export const simulateStorageWriteback = async (payload?: any): Promise<StorageWritebackReport> => (await api.post("/storage-writeback/simulate", payload || {})).data
 
-export interface GpuDeviceProfile { gpu_id: string; name: string; [k: string]: any }
-export interface ExecutionTestDiagnostic { test_id: string; test_name: string; target_location: string; observed_output: string; expected_output: string; status: string; ulp_drift?: number | null; root_cause: string; resolution: string; [k: string]: any }
-export interface IntelGpuDiagnosticReport { gpu_id: string; device_id: string; driver_version: string; vulkan_version: string; total_diagnosed: number; baseline_passed: number; baseline_failed: number; has_int64_atomics: boolean; diagnostics: ExecutionTestDiagnostic[]; recommendations: string[]; [k: string]: any }
-export const getIntelGpuProfiles = async (): Promise<GpuDeviceProfile[]> => (await api.get("/intel-gpu/profiles")).data
-export const getIntelGpuDiagnostics = async (gpuId?: string, applyFixes?: boolean): Promise<IntelGpuDiagnosticReport> => (await api.get("/intel-gpu/diagnostics", { params: { gpu_id: gpuId, apply_fixes: applyFixes } })).data
-export const simulateIntelGpuTest = async (payload: any): Promise<ExecutionTestDiagnostic> => (await api.post("/intel-gpu/simulate", payload)).data

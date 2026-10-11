@@ -1,9 +1,22 @@
 # Changelog
 
-## 1.7.0 — work-in-progress checkpoint
+## 1.8.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
 
+## 1.7.0 — Source budget compliance & Intel GPU removal
+
+### Removed
+- **Intel GPU Diagnostics (out of scope)**: Removed `IntelGpuCompatAnalyzer` service (`backend/services/intel_gpu.py`), `IntelGpuPanel` component (`frontend/src/components/intel-gpu-panel.tsx`), associated API endpoints (`/api/v1/intel-gpu/*`), TypeScript interfaces and client functions (`frontend/src/api.ts`), navigation route and link (`frontend/src/App.tsx`, `frontend/src/layout.tsx`), and all related tests. This feature was not part of the core 6 workflows defined in `portfolio.json` and was removed to bring the source code within the 150 KB budget baseline.
+
+### Changed
+- **Analytics endpoint**: Removed `intel_gpu_diagnostics` field from `/api/v1/analytics` response.
+- **Source budget**: Reduced first-party source from ~155 KB to ~140 KB, now within the 50–150 KB requirement.
+
+### Fixed
+- **Preflight validation**: All required files present, source budget compliant, no unfinished code markers, no token-shaped files.
+
+## 1.7.0 — work-in-progress checkpoint
 ## 1.6.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.

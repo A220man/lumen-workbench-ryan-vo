@@ -328,52 +328,6 @@ def test_storage_writeback_simulate_endpoint(client, operator_headers):
     assert len(report["units"]) > 0
 
 
-def test_intel_gpu_profiles_endpoint(client, operator_headers):
-    """Test retrieving supported GPU profiles."""
-    res = client.get("/api/v1/intel-gpu/profiles", headers=operator_headers)
-    assert res.status_code == 200
-    profiles = res.json()
-    assert len(profiles) >= 2
-    ids = [p["gpu_id"] for p in profiles]
-    assert "intel_uhd_770" in ids
-    assert "rtx_4080" in ids
-
-
-def test_intel_gpu_diagnostics_endpoint(client, operator_headers):
-    """Test retrieving Intel GPU diagnostics for issue #2114."""
-    # Baseline with no fixes
-    res = client.get("/api/v1/intel-gpu/diagnostics?gpu_id=intel_uhd_770&apply_fixes=false", headers=operator_headers)
-    assert res.status_code == 200
-    data = res.json()
-    assert data["gpu_id"] == "intel_uhd_770"
-    assert data["baseline_failed"] == 4
-    assert data["baseline_passed"] == 0
-    assert len(data["diagnostics"]) == 4
-
-    # With fixes applied
-    res_fixed = client.get("/api/v1/intel-gpu/diagnostics?gpu_id=intel_uhd_770&apply_fixes=true", headers=operator_headers)
-    assert res_fixed.status_code == 200
-    data_fixed = res_fixed.json()
-    assert data_fixed["baseline_failed"] == 0
-    assert data_fixed["baseline_passed"] == 4
-    assert data_fixed["overall_status"] == "clean"
-
-
-def test_intel_gpu_simulate_endpoint(client, operator_headers):
-    """Test simulating a single Intel GPU test with fix toggle."""
-    payload = {
-        "test_id": "vop1_float_unary",
-        "gpu_id": "intel_uhd_770",
-        "apply_fix": True,
-    }
-    res = client.post("/api/v1/intel-gpu/simulate", json=payload, headers=operator_headers)
-    assert res.status_code == 200
-    data = res.json()
-    assert data["test_id"] == "vop1_float_unary"
-    assert data["status"] == "passed"
-    assert data["observed_output"] == "0x3f7fbd2c"
-
-
 
 
 
