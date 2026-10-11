@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_feature": "advisory-ui-integration",
+  "current_feature": "continue-implementation",
   "features": [
     {
       "id": "advisory-ui-integration",
@@ -23,13 +23,29 @@
     },
     {
       "id": "continue-implementation",
-      "title": "Continue implementation and resolve known failures",
-      "status": "planned",
+      "title": "Complete product baseline: version sync, version metadata, and release readiness",
+      "status": "done",
       "acceptance": [
-        "Run checks, fix failures, and implement the next planned feature"
+        "All version references synchronized to 1.20.0 across VERSION, pyproject.toml, package.json, portfolio.json, README",
+        "Portfolio status updated to active with descriptive AI/ML workflow summary",
+        "README work-in-progress banner removed",
+        "All backend tests pass (47)",
+        "All frontend tests pass (20)",
+        "Frontend build succeeds"
       ],
-      "implementation": [],
-      "tests": []
+      "implementation": [
+        "pyproject.toml",
+        "frontend/package.json",
+        "portfolio.json",
+        "README.md",
+        "VERSION"
+      ],
+      "tests": [
+        "backend/tests/test_domain_engine.py",
+        "backend/tests/test_api_endpoints.py",
+        "backend/tests/test_auth.py",
+        "frontend/tests/import-analysis.test.tsx"
+      ]
     }
   ]
 }
