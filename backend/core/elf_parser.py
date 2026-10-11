@@ -82,57 +82,13 @@ def parse_elf_imports(data: bytes) -> list[ELFImport]:
 
 
 def _parse_phdrs(data: bytes, off: int, count: int, size: int) -> list[dict]:
-    phdrs = []
-    for i in range(count):
-        base = off + i * size
-        (p_type, p_flags, p_offset, p_vaddr, p_paddr, p_filesz, p_memsz, p_align) = (
-            struct.unpack_from(Elf64_Phdr, data, base)
-        )
-        phdrs.append(
-            {
-                "type": p_type,
-                "flags": p_flags,
-                "offset": p_offset,
-                "vaddr": p_vaddr,
-                "paddr": p_paddr,
-                "filesz": p_filesz,
-                "memsz": p_memsz,
-                "align": p_align,
-            }
-        )
-    return phdrs
+    keys = ("type", "flags", "offset", "vaddr", "paddr", "filesz", "memsz", "align")
+    return [dict(zip(keys, struct.unpack_from(Elf64_Phdr, data, off + i * size))) for i in range(count)]
 
 
 def _parse_sections(data: bytes, off: int, count: int, size: int) -> list[dict]:
-    shdrs = []
-    for i in range(count):
-        base = off + i * size
-        (
-            sh_name,
-            sh_type,
-            sh_flags,
-            sh_addr,
-            sh_offset,
-            sh_size,
-            sh_link,
-            sh_info,
-            sh_addralign,
-            sh_entsize,
-        ) = struct.unpack_from("<IIQQQQIIQQ", data, base)
-        shdrs.append(
-            {
-                "name": sh_name,
-                "type": sh_type,
-                "flags": sh_flags,
-                "addr": sh_addr,
-                "offset": sh_offset,
-                "size": sh_size,
-                "link": sh_link,
-                "info": sh_info,
-                "entsize": sh_entsize,
-            }
-        )
-    return shdrs
+    keys = ("name", "type", "flags", "addr", "offset", "size", "link", "info", "align", "entsize")
+    return [dict(zip(keys, struct.unpack_from("<IIQQQQIIQQ", data, off + i * size))) for i in range(count)]
 
 
 def _build_vaddr_map(phdrs: list[dict]) -> list[dict]:

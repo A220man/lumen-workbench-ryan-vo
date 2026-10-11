@@ -263,3 +263,37 @@ def test_shaders_stray_batch_endpoint(client, operator_headers):
     assert all(s["title_id"] == "PPSA02100" for s in shaders)
     assert all(s["status"] == "rejected_unsupported_live_use" for s in shaders)
 
+
+def test_structurizer_presets_endpoint(client, operator_headers):
+    """Test retrieving CFG structurizer presets."""
+    res = client.get("/api/v1/structurizer/presets", headers=operator_headers)
+    assert res.status_code == 200
+    presets = res.json()
+    assert len(presets) >= 2
+    repro = next(p for p in presets if p["id"] == "issue-2642-repro")
+    assert repro["adjacency"] == [[1], [2, 4], [3, 4], [4, 5], [1, 6], [1], []]
+    assert repro["expected_status"] == "budget_exceeded"
+
+
+def test_structurizer_analyze_endpoint(client, operator_headers):
+    """Test analyzing a CFG graph for merge splitting budget and loop latches."""
+    payload = {
+        "name": "custom-test-repro",
+        "adjacency": [[1], [2, 4], [3, 4], [4, 5], [1, 6], [1], []],
+        "split_budget": 28,
+    }
+    res = client.post("/api/v1/structurizer/analyze", json=payload, headers=operator_headers)
+    assert res.status_code == 200
+    report = res.json()
+    assert report["name"] == "custom-test-repro"
+    assert report["exceeded_budget"] is True
+    assert report["matches_issue_2642"] is True
+    assert report["original_blocks"] == 7
+    assert report["split_budget"] == 28
+    assert report["current_blocks"] >= 28
+    assert len(report["multi_latch_loops"]) == 1
+    assert len(report["selection_conflicts"]) >= 1
+    assert "Decouple loop latch join" in report["recommendation"]
+
+
+

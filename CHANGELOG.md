@@ -1,8 +1,19 @@
 # Changelog
 
+## 1.5.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.4.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+### Added
+- **Structurizer CFG Shared Merge Diagnostics**: Implemented `CFGStructurizerAnalyzer` in `backend/services/structurizer.py` detecting multi-latch loops, nested selection join conflicts, and synthetic merge block splitting recursion budget exhaustion (`splitBudget = originalBlocks * 4`), reproducing AnyPS5 Structurizer issue #2642 and issue #2523 stop 9.
+- **Structurizer Endpoints**: Added `POST /api/v1/structurizer/analyze` and `GET /api/v1/structurizer/presets` providing CFG diagnostic reports, budget exhaustion analysis, and preset test graphs (`issue-2642-repro` and `clean-baseline`).
+- **Frontend Structurizer UI**: Added `StructurizerPanel` (`frontend/src/components/structurizer-panel.tsx`) with preset selection, real-time CFG analysis, multi-latch metrics, synthetic merge splitting trace display, and root-cause/recommendation panels.
+- **Unit & Integration Tests**: Added 4 backend tests (40 pytest tests total) and 2 frontend vitest tests (15 vitest tests total) covering structurizer CFG analysis, AnyPS5 issue #2642 budget exhaustion, clean baseline, API endpoints, and UI interaction.
+
 
 ## 1.3.0 — work-in-progress checkpoint
 

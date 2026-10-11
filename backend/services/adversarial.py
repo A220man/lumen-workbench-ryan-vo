@@ -46,179 +46,38 @@ class AdversarialGenerator:
         self, category: Optional[str] = None, count: int = 20
     ) -> List[AdversarialTestCase]:
         """Generate adversarial test cases filtered by category or across all categories."""
-        all_cases: List[AdversarialTestCase] = []
-
-        # 1. libSceAgcDriver boundary cases
-        agc_cases = [
-            AdversarialTestCase(
-                symbol="sceAgcDriverGetTFRing",
-                nid=nid_of("sceAgcDriverGetTFRing"),
-                target_library="libSceAgcDriver",
-                category="agc_driver_boundary",
-                mutation_type="valid_boundary",
-                expected_status="resolved",
-            ),
-            AdversarialTestCase(
-                symbol="sceAgcDriverSubmit",
-                nid=nid_of("sceAgcDriverSubmit"),
-                target_library="libSceAgcDriver",
-                category="agc_driver_boundary",
-                mutation_type="valid_boundary",
-                expected_status="resolved",
-            ),
-            AdversarialTestCase(
-                symbol="sceAgcDriverTrackStorageImage",
-                nid=nid_of("sceAgcDriverTrackStorageImage"),
-                target_library="libSceAgcDriver",
-                category="agc_driver_boundary",
-                mutation_type="valid_boundary",
-                expected_status="resolved",
-            ),
-            AdversarialTestCase(
-                symbol="sceAgcDriverGetTFRing_v2",
-                nid=nid_of("sceAgcDriverGetTFRing_v2"),
-                target_library=None,
-                category="agc_driver_boundary",
-                mutation_type="near_miss",
-                expected_status="unresolved",
-            ),
-            AdversarialTestCase(
-                symbol="sceAgcDriverRegisterShaderType99",
-                nid=nid_of("sceAgcDriverRegisterShaderType99"),
-                target_library=None,
-                category="agc_driver_boundary",
-                mutation_type="invalid_shader_type",
-                expected_status="unresolved",
-            ),
-            AdversarialTestCase(
-                symbol="sceAgcDriverStorageTextureEagerWriteback",
-                nid=nid_of("sceAgcDriverStorageTextureEagerWriteback"),
-                target_library=None,
-                category="agc_driver_boundary",
-                mutation_type="synthetic_boundary",
-                expected_status="unresolved",
-            ),
+        specs = [
+            ("sceAgcDriverGetTFRing", "libSceAgcDriver", "agc_driver_boundary", "valid_boundary", "resolved"),
+            ("sceAgcDriverSubmit", "libSceAgcDriver", "agc_driver_boundary", "valid_boundary", "resolved"),
+            ("sceAgcDriverTrackStorageImage", "libSceAgcDriver", "agc_driver_boundary", "valid_boundary", "resolved"),
+            ("sceAgcDriverGetTFRing_v2", None, "agc_driver_boundary", "near_miss", "unresolved"),
+            ("sceAgcDriverRegisterShaderType99", None, "agc_driver_boundary", "invalid_shader_type", "unresolved"),
+            ("sceAgcDriverStorageTextureEagerWriteback", None, "agc_driver_boundary", "synthetic_boundary", "unresolved"),
+            ("sceVideoOutGetResolutionStatus", "libSceVideoOut", "video_out_boundary", "valid_boundary", "resolved"),
+            ("sceVideoOutOpen", "libSceVideoOut", "video_out_boundary", "valid_boundary", "resolved"),
+            ("sceVideoOutSubmitFlip", "libSceVideoOut", "video_out_boundary", "valid_boundary", "resolved"),
+            ("sceVideoOutGetResolutionStatus_unsupported", None, "video_out_boundary", "near_miss", "unresolved"),
+            ("sceVideoOutPixelFormatC001000622000000", None, "video_out_boundary", "unsupported_format", "unresolved"),
+            ("sceVideoOutSubmitFlipAsync_nonexistent", None, "video_out_boundary", "synthetic_boundary", "unresolved"),
+            ("sceXmlInit", "libSceXml", "missing_module_probe", "missing_probe", "missing-module"),
+            ("sceXmlParse", "libSceXml", "missing_module_probe", "missing_probe", "missing-module"),
+            ("CreateEx", "libSceOpusDec", "missing_module_probe", "missing_probe", "missing-module"),
+            ("sceUnknownMissingModule_func", None, "missing_module_probe", "unknown_probe", "unresolved"),
+            ("", None, "malformed_symbol", "empty_symbol", "unresolved"),
+            ("!@#$%^&*()_+", None, "malformed_symbol", "special_characters", "unresolved"),
+            ("sysctl_boundary_overflow_" + ("x" * 64), None, "malformed_symbol", "oversized_identifier", "unresolved"),
         ]
-        all_cases.extend(agc_cases)
-
-        # 2. libSceVideoOut boundary cases
-        video_cases = [
+        all_cases = [
             AdversarialTestCase(
-                symbol="sceVideoOutGetResolutionStatus",
-                nid=nid_of("sceVideoOutGetResolutionStatus"),
-                target_library="libSceVideoOut",
-                category="video_out_boundary",
-                mutation_type="valid_boundary",
-                expected_status="resolved",
-            ),
-            AdversarialTestCase(
-                symbol="sceVideoOutOpen",
-                nid=nid_of("sceVideoOutOpen"),
-                target_library="libSceVideoOut",
-                category="video_out_boundary",
-                mutation_type="valid_boundary",
-                expected_status="resolved",
-            ),
-            AdversarialTestCase(
-                symbol="sceVideoOutSubmitFlip",
-                nid=nid_of("sceVideoOutSubmitFlip"),
-                target_library="libSceVideoOut",
-                category="video_out_boundary",
-                mutation_type="valid_boundary",
-                expected_status="resolved",
-            ),
-            AdversarialTestCase(
-                symbol="sceVideoOutGetResolutionStatus_unsupported",
-                nid=nid_of("sceVideoOutGetResolutionStatus_unsupported"),
-                target_library=None,
-                category="video_out_boundary",
-                mutation_type="near_miss",
-                expected_status="unresolved",
-            ),
-            AdversarialTestCase(
-                symbol="sceVideoOutPixelFormatC001000622000000",
-                nid=nid_of("sceVideoOutPixelFormatC001000622000000"),
-                target_library=None,
-                category="video_out_boundary",
-                mutation_type="unsupported_format",
-                expected_status="unresolved",
-            ),
-            AdversarialTestCase(
-                symbol="sceVideoOutSubmitFlipAsync_nonexistent",
-                nid=nid_of("sceVideoOutSubmitFlipAsync_nonexistent"),
-                target_library=None,
-                category="video_out_boundary",
-                mutation_type="synthetic_boundary",
-                expected_status="unresolved",
-            ),
+                symbol=sym,
+                nid=nid_of(sym) if sym else 0,
+                target_library=lib,
+                category=cat,
+                mutation_type=mut,
+                expected_status=exp,
+            )
+            for sym, lib, cat, mut, exp in specs
         ]
-        all_cases.extend(video_cases)
-
-        # 3. Missing module probe cases (e.g. libSceXml, libSceOpusDec)
-        missing_cases = [
-            AdversarialTestCase(
-                symbol="sceXmlInit",
-                nid=nid_of("sceXmlInit"),
-                target_library="libSceXml",
-                category="missing_module_probe",
-                mutation_type="missing_probe",
-                expected_status="missing-module",
-            ),
-            AdversarialTestCase(
-                symbol="sceXmlParse",
-                nid=nid_of("sceXmlParse"),
-                target_library="libSceXml",
-                category="missing_module_probe",
-                mutation_type="missing_probe",
-                expected_status="missing-module",
-            ),
-            AdversarialTestCase(
-                symbol="CreateEx",
-                nid=nid_of("CreateEx"),
-                target_library="libSceOpusDec",
-                category="missing_module_probe",
-                mutation_type="missing_probe",
-                expected_status="missing-module",
-            ),
-            AdversarialTestCase(
-                symbol="sceUnknownMissingModule_func",
-                nid=nid_of("sceUnknownMissingModule_func"),
-                target_library=None,
-                category="missing_module_probe",
-                mutation_type="unknown_probe",
-                expected_status="unresolved",
-            ),
-        ]
-        all_cases.extend(missing_cases)
-
-        # 4. Malformed symbol and edge cases
-        edge_cases = [
-            AdversarialTestCase(
-                symbol="",
-                nid=0,
-                target_library=None,
-                category="malformed_symbol",
-                mutation_type="empty_symbol",
-                expected_status="unresolved",
-            ),
-            AdversarialTestCase(
-                symbol="!@#$%^&*()_+",
-                nid=nid_of("!@#$%^&*()_+"),
-                target_library=None,
-                category="malformed_symbol",
-                mutation_type="special_characters",
-                expected_status="unresolved",
-            ),
-            AdversarialTestCase(
-                symbol="sysctl_boundary_overflow_" + ("x" * 64),
-                nid=nid_of("sysctl_boundary_overflow_" + ("x" * 64)),
-                target_library=None,
-                category="malformed_symbol",
-                mutation_type="oversized_identifier",
-                expected_status="unresolved",
-            ),
-        ]
-        all_cases.extend(edge_cases)
 
         # Filter by category if requested
         if category and category != "all":
