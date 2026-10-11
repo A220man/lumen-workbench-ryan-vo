@@ -1,9 +1,19 @@
 # Changelog
 
-## 1.8.0 — work-in-progress checkpoint
+## 1.9.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
 
+## 1.8.0 — Version consistency and documentation alignment
+
+### Changed
+- **Version synchronization**: Aligned `VERSION` (1.8.0), `README.md` (1.8.0), and `portfolio.json` (1.8.0) to consistent version.
+- **Portfolio metadata**: Updated `portfolio.json` with descriptive AI/ML workflow summary and changed status from `work-in-progress` to `active`.
+
+### Fixed
+- **Documentation consistency**: Corrected version references across all project metadata files.
+
+## 1.8.0 — work-in-progress checkpoint
 ## 1.7.0 — Source budget compliance & Intel GPU removal
 
 ### Removed
