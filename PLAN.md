@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-storage-texture-writeback-diagnostics
+version-synchronization-baseline-complete
 
 ## Roadmap
 
@@ -85,4 +85,19 @@ Acceptance:
 Implementation: `backend/services/storage_writeback.py`, `backend/app/api/router.py`, `frontend/src/api.ts`, `frontend/src/components/storage-writeback.tsx`, `frontend/src/App.tsx`, `frontend/src/layout.tsx`
 
 Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `frontend/tests/storage-writeback.test.tsx`
+
+### version-synchronization-baseline-complete — Version synchronization and product baseline completion
+
+Status: done
+
+Acceptance:
+- All metadata files (VERSION, README.md, portfolio.json, pyproject.toml, frontend/package.json) show consistent version 1.9.0
+- portfolio.json status updated from work-in-progress to active
+- CHANGELOG.md documents 1.9.0 release with complete diagnostic suite summary
+- All 45 backend tests and 17 frontend tests continue to pass
+- Preflight validation passes with zero missing files and source within budget
+
+Implementation: `README.md`, `portfolio.json`, `pyproject.toml`, `frontend/package.json`, `CHANGELOG.md`, `feature-plan.json`
+
+Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `backend/tests/test_auth.py`, `frontend/tests/`
 

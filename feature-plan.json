@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_feature": "storage-texture-writeback-diagnostics",
+  "current_feature": "version-synchronization-baseline-complete",
   "features": [
     {
       "id": "complete-test-baseline-and-ci",
@@ -144,6 +144,32 @@
         "backend/tests/test_domain_engine.py",
         "backend/tests/test_api_endpoints.py",
         "frontend/tests/storage-writeback.test.tsx"
+      ]
+    },
+    {
+      "id": "version-synchronization-baseline-complete",
+      "title": "Version synchronization and product baseline completion",
+      "status": "done",
+      "acceptance": [
+        "All metadata files (VERSION, README.md, portfolio.json, pyproject.toml, frontend/package.json) show consistent version 1.9.0",
+        "portfolio.json status updated from work-in-progress to active",
+        "CHANGELOG.md documents 1.9.0 release with complete diagnostic suite summary",
+        "All 45 backend tests and 17 frontend tests continue to pass",
+        "Preflight validation passes with zero missing files and source within budget"
+      ],
+      "implementation": [
+        "README.md",
+        "portfolio.json",
+        "pyproject.toml",
+        "frontend/package.json",
+        "CHANGELOG.md",
+        "feature-plan.json"
+      ],
+      "tests": [
+        "backend/tests/test_domain_engine.py",
+        "backend/tests/test_api_endpoints.py",
+        "backend/tests/test_auth.py",
+        "frontend/tests/"
       ]
     }
   ]
