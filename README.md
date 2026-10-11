@@ -42,6 +42,12 @@ The evaluation engine compares resolver predictions against a grounded truth dat
 - Calculate stress-test stability scores (0–100%) and verify 0% false-positive rates on negatives
 - Report boundary robustness breakdown by category (graphics, missing module, malformed symbols)
 
+### 4. RDNA2 Shader Recompiler Diagnostics (Issue #2548)
+- Model RDNA2 packed pixel ancillary register bitfield extraction (render target index bits 16-26 mapped to `Layer`, sample index bits 8-11 mapped to `SampleId`)
+- Detect register reuse patterns in Unreal Engine 4 shaders (Stray, PPSA02100 v1.05) where `SelectU32(HelperInvocation, ...)` propagates raw ancillary words into downstream attributes
+- Track live use chains (`Phi`, `BitCastF32U32`, `PackFloat2x16Rtz`, `SetAttribute`) and evaluate PR #1179 rebuildability
+- Interactive bitfield reconstruction and decoding workbench in UI
+
 ### Authentication & Authorization
 - Secure OIDC login through Keycloak (state + nonce + PKCE)
 - Role-based access control (viewer, operator, admin)
@@ -146,6 +152,9 @@ graph TB
 | `/api/v1/adversarial/stress-test` | POST | Run boundary stress test and compute stability scores |
 | `/api/v1/stats` | GET | Retrieve live title, import volume, and evaluation stats |
 | `/api/v1/analytics` | GET | Retrieve domain performance metrics and stability scores |
+| `/api/v1/shaders/rdna2-layout` | GET | Retrieve RDNA2 packed pixel ancillary VGPR layout |
+| `/api/v1/shaders/analyze` | POST | Analyze shader instruction stream and decode ancillary words |
+| `/api/v1/shaders/stray-batch` | GET | Batch analysis for Stray (PPSA02100) UE4 shaders (issue #2548) |
 | `/api/v1/auth/login` | POST | Authenticate user with role-based JWT token |
 | `/api/v1/auth/logout` | POST | Logout user |
 | `/api/v1/auth/me` | GET | Get current authenticated user profile |

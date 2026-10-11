@@ -138,3 +138,99 @@ def test_adversarial_stress_test_stability():
     assert report.category_scores["video_out_boundary"]["score"] == 100.0
 
 
+def test_rdna2_ancillary_layout_structure():
+    """Verify RDNA2 ancillary bitfield specification matches PR #1179 / issue #2548."""
+    from backend.services.shader_analyzer import RDNA2_ANCILLARY_LAYOUT
+    layout_map = {b.name: b for b in RDNA2_ANCILLARY_LAYOUT}
+    assert "render_target_index" in layout_map
+    assert "sample_index" in layout_map
+    assert "prim_type" in layout_map
+
+    rt = layout_map["render_target_index"]
+    assert rt.offset == 16
+    assert rt.length == 11
+    assert rt.modeled is True
+    assert rt.source_builtin == "Layer"
+
+    sample = layout_map["sample_index"]
+    assert sample.offset == 8
+    assert sample.length == 4
+    assert sample.modeled is True
+    assert sample.source_builtin == "SampleId"
+
+    prim = layout_map["prim_type"]
+    assert prim.offset == 0
+    assert prim.length == 2
+    assert prim.modeled is False
+
+
+def test_rdna2_bitfield_extraction_and_rebuild():
+    """Verify bitfield decoding and PR #1179 word reconstruction."""
+    from backend.services.shader_analyzer import RDNA2ShaderAnalyzer
+    analyzer = RDNA2ShaderAnalyzer()
+
+    # SampleId=3, Layer=7 -> (3 << 8) | (7 << 16) = 0x00070300
+    rebuilt = analyzer.rebuild_ancillary_word(sample_id=3, layer=7)
+    assert rebuilt == 0x00070300
+
+    decoded = analyzer.decode_word(rebuilt)
+    assert decoded["sample_index"]["value"] == 3
+    assert decoded["render_target_index"]["value"] == 7
+    assert decoded["sample_index"]["modeled"] is True
+    assert decoded["render_target_index"]["modeled"] is True
+
+
+def test_shader_recompiler_rebuildable_shader():
+    """Verify shader extracting only valid bitfields without register reuse is rebuildable."""
+    from backend.services.shader_analyzer import RDNA2ShaderAnalyzer, IRInstruction
+    analyzer = RDNA2ShaderAnalyzer()
+    instructions = [
+        IRInstruction(0, "BitFieldUExtract", "v0", ["v4"], bit_offset=16, bit_length=11),
+        IRInstruction(1, "BitFieldUExtract", "v1", ["v4"], bit_offset=8, bit_length=4),
+        IRInstruction(2, "v_mov_b32", "v2", ["v0"]),
+    ]
+    report = analyzer.analyze_ir_stream("0x1000", "PPSA00001", instructions)
+    assert report.status == "rebuildable"
+    assert report.rebuildable_pr1179 is True
+    assert "render_target_index" in report.extracted_fields
+    assert "sample_index" in report.extracted_fields
+    assert report.register_reused is False
+    assert report.rejection_reason is None
+
+
+def test_shader_recompiler_unsupported_live_use_detection():
+    """Verify UE4 register reuse triggers unsupported live use rejection (issue #2548)."""
+    from backend.services.shader_analyzer import RDNA2ShaderAnalyzer, IRInstruction
+    analyzer = RDNA2ShaderAnalyzer()
+    instructions = [
+        IRInstruction(0, "BitFieldUExtract", "vN", ["v4"], bit_offset=16, bit_length=11),
+        IRInstruction(1, "SelectU32", "v4", ["v4", "SelectU32 ? ?"], condition="IEqual32(HelperInvocation, 0)"),
+        IRInstruction(2, "Phi", "v4_phi", ["v4"]),
+        IRInstruction(3, "BitCastF32U32", "f_val", ["v4_phi"]),
+        IRInstruction(4, "PackFloat2x16Rtz", "packed_attr", ["f_val"]),
+        IRInstruction(5, "SetAttribute", None, ["packed_attr"]),
+    ]
+    report = analyzer.analyze_ir_stream("0x200e370000", "PPSA02100", instructions)
+    assert report.status == "rejected_unsupported_live_use"
+    assert report.rebuildable_pr1179 is False
+    assert report.register_reused is True
+    assert "SelectU32" in report.live_use_chain
+    assert "SetAttribute" in report.live_use_chain
+    assert report.rejection_reason is not None
+    assert "unsupported live use" in report.rejection_reason
+
+
+def test_stray_catalog_batch_shaders():
+    """Verify Stray (PPSA02100) catalog contains 26 deferred shaders from issue #2548."""
+    from backend.services.shader_analyzer import RDNA2ShaderAnalyzer
+    analyzer = RDNA2ShaderAnalyzer()
+    shaders = analyzer.get_stray_catalog_shaders()
+    assert len(shaders) == 26
+    for s in shaders:
+        assert s.title_id == "PPSA02100"
+        assert s.status == "rejected_unsupported_live_use"
+        assert s.rebuildable_pr1179 is False
+        assert s.register_reused is True
+        assert "render_target_index" in s.extracted_fields
+
+

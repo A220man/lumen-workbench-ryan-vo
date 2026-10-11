@@ -28,7 +28,7 @@ COPY README.md ./
 COPY VERSION ./
 
 # Create data directory and set permissions
-RUN mkdir -p /data && chown -R appuser:appgroup /data
+RUN mkdir -p /data && chown -R appuser:appgroup /data /app
 
 # Switch to non-root user
 USER appuser

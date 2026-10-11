@@ -1,8 +1,19 @@
 # Changelog
 
+## 1.4.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.3.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+### Added
+- **RDNA2 Shader Recompiler Diagnostics**: Implemented `RDNA2ShaderAnalyzer` in `backend/services/shader_analyzer.py` modeling RDNA2 packed pixel ancillary register layout (`SampleId` bits 8-11, `Layer` bits 16-26, unmodelled prim type / VRS bits) and evaluating PR #1179 bitfield reconstruction rules.
+- **Register Reuse & Live Use Tracking**: Implemented dataflow taint tracking across IR instructions (`SelectU32`, `Phi`, `BitCastF32U32`, `PackFloat2x16Rtz`, `SetAttribute`) to detect and report unsupported live use failures in Unreal Engine 4 shaders (issue #2548, Stray PPSA02100 v1.05).
+- **Shader Recompiler Endpoints**: Added `GET /api/v1/shaders/rdna2-layout`, `POST /api/v1/shaders/analyze`, and `GET /api/v1/shaders/stray-batch` providing bitfield specifications, custom instruction stream analysis, and 26-shader catalog diagnostics.
+- **Frontend Shader Recompiler UI**: Added `ShaderAnalyzerPanel` (`frontend/src/components/shader-analyzer.tsx`) with RDNA2 layout inspection, interactive bitfield reconstruction and decoding, and catalog diagnostics for Stray UE4 shaders.
+- **Unit and Integration Tests**: Added 9 backend tests (36 pytest tests total) and 2 frontend vitest tests (13 vitest tests total) covering RDNA2 bitfield extraction, reconstruction, register reuse taint analysis, API endpoints, and UI rendering.
 
 ## 1.2.0 — work-in-progress checkpoint
 

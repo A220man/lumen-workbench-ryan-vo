@@ -8,7 +8,8 @@
   "workflows": [
     "Analyze PS5 ELF imports and resolve against host library exports",
     "Evaluate resolver performance against labeled community audit dataset",
-    "Generate adversarial test cases to improve robustness"
+    "Generate adversarial test cases to improve robustness",
+    "Diagnose RDNA2 ancillary register reuse and shader recompiler live use failures"
   ],
   "auth": "oidc-keycloak-saml-broker",
   "llm_providers": [

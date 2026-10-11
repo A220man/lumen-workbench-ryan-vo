@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_feature": "adversarial-dataset-expansion",
+  "current_feature": "rdna2-ancillary-word-and-shader-analysis",
   "features": [
     {
       "id": "complete-test-baseline-and-ci",
@@ -82,13 +82,24 @@
     {
       "id": "rdna2-ancillary-word-and-shader-analysis",
       "title": "Shader recompiler ancillary register tracking and RDNA2 packed pixel extraction",
-      "status": "planned",
+      "status": "done",
       "acceptance": [
         "Model RDNA2 packed pixel ancillary register bitfield extraction (render target and sample index) for UE4 shaders (issue #2548)",
         "Diagnostic reporting for live register reuse and unsupported bit range extraction"
       ],
-      "implementation": [],
-      "tests": []
+      "implementation": [
+        "backend/services/shader_analyzer.py",
+        "backend/app/api/router.py",
+        "frontend/src/api.ts",
+        "frontend/src/components/shader-analyzer.tsx",
+        "frontend/src/App.tsx",
+        "frontend/src/layout.tsx"
+      ],
+      "tests": [
+        "backend/tests/test_domain_engine.py",
+        "backend/tests/test_api_endpoints.py",
+        "frontend/tests/shader-analyzer.test.tsx"
+      ]
     },
     {
       "id": "structurizer-cfg-budget-diagnostics",

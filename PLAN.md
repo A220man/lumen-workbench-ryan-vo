@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-adversarial-dataset-expansion
+rdna2-ancillary-word-and-shader-analysis
 
 ## Roadmap
 
@@ -51,11 +51,15 @@ Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.
 
 ### rdna2-ancillary-word-and-shader-analysis — Shader recompiler ancillary register tracking and RDNA2 packed pixel extraction
 
-Status: planned
+Status: done
 
 Acceptance:
 - Model RDNA2 packed pixel ancillary register bitfield extraction (render target and sample index) for UE4 shaders (issue #2548)
 - Diagnostic reporting for live register reuse and unsupported bit range extraction
+
+Implementation: `backend/services/shader_analyzer.py`, `backend/app/api/router.py`, `frontend/src/api.ts`, `frontend/src/components/shader-analyzer.tsx`, `frontend/src/App.tsx`, `frontend/src/layout.tsx`
+
+Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `frontend/tests/shader-analyzer.test.tsx`
 
 ### structurizer-cfg-budget-diagnostics — Structurizer CFG shared merge splitting diagnostics and loop latch analysis
 

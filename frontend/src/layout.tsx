@@ -47,6 +47,13 @@ const Sidebar: React.FC = () => {
         >
           Evaluations
         </Link>
+        <Link
+          to="/shaders"
+          className="block px-3 py-2 rounded-md text-sm font-medium
+            hover:bg-gray-100 text-gray-700"
+        >
+          Shaders
+        </Link>
       </nav>
     </aside>
   )
