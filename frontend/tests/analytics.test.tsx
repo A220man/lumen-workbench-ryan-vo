@@ -56,4 +56,31 @@ describe("AnalyticsPanel Component", () => {
       expect(screen.getByText("No analytics data")).toBeInTheDocument()
     })
   })
+
+  it("renders adversarial stability metric when present", async () => {
+    vi.spyOn(hooks, "useAuth").mockReturnValue({
+      user: { id: "1", email: "viewer@test.local", name: "Viewer", role: "viewer" },
+      token: "dummy-token",
+      isAuthenticated: true,
+      login: vi.fn(),
+      logout: vi.fn(),
+      checkRole: vi.fn().mockReturnValue(true),
+    })
+
+    vi.spyOn(apiClient, "get").mockResolvedValue({
+      data: {
+        resolution_by_library: "Lead module: libkernel (31 symbols)",
+        performance_trend: "F1=0.985 (coverage 97.2%)",
+        import_volume: "42 records analyzed",
+        adversarial_stability: "100.0% stability (19/19 boundary probes)",
+      },
+    })
+
+    render(<AnalyticsPanel />)
+
+    await waitFor(() => {
+      expect(screen.getByText("Adversarial Stability")).toBeInTheDocument()
+    })
+    expect(screen.getByText("100.0% stability (19/19 boundary probes)")).toBeInTheDocument()
+  })
 })

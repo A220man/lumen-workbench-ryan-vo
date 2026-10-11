@@ -1,8 +1,20 @@
 # Changelog
 
+## 1.3.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.2.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+### Added
+- **Adversarial ELF Test Case Generator**: Implemented `AdversarialGenerator` in `backend/services/adversarial.py` synthesizing graphics driver boundary imports (`libSceAgcDriver`, `libSceVideoOut`), missing-module probes (`libSceXml`, `libSceOpusDec`), near-miss mutations, and malformed edge cases.
+- **Stress-Testing Engine**: Added `run_stress_test` reporting stability scores (0–100%), false-positive rates on adversarial negatives, category resilience breakdowns, and detected vulnerabilities.
+- **Adversarial Endpoints**: Added `POST /api/v1/adversarial/generate` supporting category filtering and prefix specification, and `POST /api/v1/adversarial/stress-test` for automated boundary stress evaluation.
+- **Graphics Driver Module Resolution**: Expanded `export_db.py` and `evaluator.py` ground truth with `libSceVideoOut` (`sceVideoOutOpen`, `sceVideoOutSubmitFlip`, `sceVideoOutRegisterBuffers`) and `libSceAgcDriver` (`sceAgcDriverSubmit`, `sceAgcDriverTrackStorageImage`, `sceAgcDriverRegisterResource`), plus `libSceSsl` and `libSceNet`.
+- **Frontend Adversarial Telemetry**: Extended typed API client with `generateAdversarialCases`, `runStressTest`, and updated `AnalyticsPanel` to display live adversarial stability metrics.
+- **Test Baseline**: Added 5 new backend unit/API tests (27 pytest tests total) and 1 new frontend test (11 vitest tests total) verifying graphics exports, boundary synthesis, stability scores, and UI rendering.
 
 ## 1.1.0 — work-in-progress checkpoint
 

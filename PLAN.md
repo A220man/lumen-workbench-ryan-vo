@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-system-telemetry-and-missing-library-resolution
+adversarial-dataset-expansion
 
 ## Roadmap
 
@@ -39,9 +39,29 @@ Tests: `backend/tests/test_api_endpoints.py`, `backend/tests/test_domain_engine.
 
 ### adversarial-dataset-expansion — Adversarial dataset generation and graphics driver module resolution
 
-Status: planned
+Status: done
 
 Acceptance:
 - Expand adversarial generator with synthetic boundary imports for libSceAgcDriver and libSceVideoOut
 - Report stress-test stability scores against host export boundaries
+
+Implementation: `backend/services/adversarial.py`, `backend/services/export_db.py`, `backend/services/evaluator.py`, `backend/app/api/router.py`, `frontend/src/api.ts`, `frontend/src/components/analytics.tsx`
+
+Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `frontend/tests/analytics.test.tsx`
+
+### rdna2-ancillary-word-and-shader-analysis — Shader recompiler ancillary register tracking and RDNA2 packed pixel extraction
+
+Status: planned
+
+Acceptance:
+- Model RDNA2 packed pixel ancillary register bitfield extraction (render target and sample index) for UE4 shaders (issue #2548)
+- Diagnostic reporting for live register reuse and unsupported bit range extraction
+
+### structurizer-cfg-budget-diagnostics — Structurizer CFG shared merge splitting diagnostics and loop latch analysis
+
+Status: planned
+
+Acceptance:
+- Detect multi-latch loops with nested selection joins exceeding splitting budget (issue #2642)
+- Compute CFG complexity metrics and identify synthetic merge block recursion limits
 
