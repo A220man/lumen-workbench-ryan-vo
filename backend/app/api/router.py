@@ -19,11 +19,18 @@ from ...services.import_resolver import ImportResolver
 from ...services.evaluator import run_evaluation as run_eval_metrics
 from ...services.advisory import build_advisor, explain_imports
 from ...services.adversarial import AdversarialGenerator, run_stress_test
+from ...services.shader_analyzer import (
+    RDNA2ShaderAnalyzer,
+    IRInstruction,
+    ShaderAnalysisReport,
+    RDNA2_ANCILLARY_LAYOUT,
+)
 from .auth import get_current_user, require_role
 
 router = APIRouter(tags=["API"])
 resolver_singleton = ImportResolver()
 adversarial_generator_singleton = AdversarialGenerator()
+shader_analyzer_singleton = RDNA2ShaderAnalyzer()
 
 
 class RunEvaluationRequest(BaseModel):
@@ -343,6 +350,7 @@ class AnalyticsResponse(BaseModel):
     per_library: Dict[str, Dict[str, int]]
     metrics: Dict[str, float]
     adversarial_stability: Optional[str] = None
+    shader_diagnostics: Optional[str] = None
 
 
 @router.get("/stats", response_model=StatsResponse)
@@ -382,6 +390,8 @@ async def get_analytics(
     """Retrieve resolution analytics and benchmark metrics."""
     metrics = run_eval_metrics(resolver_singleton)
     stress_report = run_stress_test(resolver_singleton)
+    stray_shaders = shader_analyzer_singleton.get_stray_catalog_shaders()
+    deferred_count = sum(1 for s in stray_shaders if s.status == "rejected_unsupported_live_use")
     top_lib = (
         max(metrics.per_library.items(), key=lambda x: x[1].get("tp", 0))[0]
         if metrics.per_library
@@ -402,4 +412,140 @@ async def get_analytics(
             "stability_score": round(stress_report.stability_score, 2),
         },
         adversarial_stability=f"{stress_report.stability_score:.1f}% stability ({stress_report.passed_cases}/{stress_report.total_cases} boundary probes)",
+        shader_diagnostics=f"{deferred_count}/{len(stray_shaders)} Stray UE4 shaders deferred (issue #2548 unsupported live use)",
     )
+
+
+# -----------------------------------------------------------------------------
+# Shader Recompiler Diagnostics (Issue #2548)
+# -----------------------------------------------------------------------------
+
+class ShaderAnalyzeInstruction(BaseModel):
+    index: int
+    opcode: str
+    dest: Optional[str] = None
+    sources: List[str] = Field(default_factory=list)
+    bit_offset: Optional[int] = None
+    bit_length: Optional[int] = None
+    condition: Optional[str] = None
+
+
+class ShaderAnalyzeRequest(BaseModel):
+    shader_address: str = "0x200e370000"
+    title_id: str = "PPSA02100"
+    ancillary_vgpr: str = "v4"
+    instructions: Optional[List[ShaderAnalyzeInstruction]] = None
+    raw_word: Optional[int] = None
+
+
+class BitfieldLayoutItem(BaseModel):
+    name: str
+    offset: int
+    length: int
+    modeled: bool
+    source_builtin: Optional[str] = None
+    description: str
+
+
+class ShaderAnalysisResponse(BaseModel):
+    shader_address: str
+    title_id: str
+    ancillary_vgpr: str
+    has_ancillary_access: bool
+    extracted_fields: List[str]
+    register_reused: bool
+    live_use_chain: List[str]
+    unsupported_bit_access: bool
+    rebuildable_pr1179: bool
+    rejection_reason: Optional[str] = None
+    status: str
+    decoded_word: Optional[Dict[str, Any]] = None
+
+
+@router.get("/shaders/rdna2-layout", response_model=List[BitfieldLayoutItem])
+async def get_rdna2_layout(
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Retrieve RDNA2 packed pixel ancillary VGPR bitfield specification."""
+    return [
+        BitfieldLayoutItem(
+            name=b.name,
+            offset=b.offset,
+            length=b.length,
+            modeled=b.modeled,
+            source_builtin=b.source_builtin,
+            description=b.description,
+        )
+        for b in RDNA2_ANCILLARY_LAYOUT
+    ]
+
+
+@router.post("/shaders/analyze", response_model=ShaderAnalysisResponse)
+async def analyze_shader(
+    payload: ShaderAnalyzeRequest,
+    user: Dict[str, Any] = Depends(require_role(["operator", "admin"])),
+):
+    """Analyze shader instruction stream for RDNA2 ancillary register reuse and bitfield extraction."""
+    insts = []
+    if payload.instructions:
+        insts = [
+            IRInstruction(
+                index=i.index,
+                opcode=i.opcode,
+                dest=i.dest,
+                sources=i.sources,
+                bit_offset=i.bit_offset,
+                bit_length=i.bit_length,
+                condition=i.condition,
+            )
+            for i in payload.instructions
+        ]
+    report = shader_analyzer_singleton.analyze_ir_stream(
+        shader_address=payload.shader_address,
+        title_id=payload.title_id,
+        instructions=insts,
+        ancillary_vgpr=payload.ancillary_vgpr,
+    )
+    decoded = None
+    if payload.raw_word is not None:
+        decoded = shader_analyzer_singleton.decode_word(payload.raw_word)
+
+    return ShaderAnalysisResponse(
+        shader_address=report.shader_address,
+        title_id=report.title_id,
+        ancillary_vgpr=report.ancillary_vgpr,
+        has_ancillary_access=report.has_ancillary_access,
+        extracted_fields=report.extracted_fields,
+        register_reused=report.register_reused,
+        live_use_chain=report.live_use_chain,
+        unsupported_bit_access=report.unsupported_bit_access,
+        rebuildable_pr1179=report.rebuildable_pr1179,
+        rejection_reason=report.rejection_reason,
+        status=report.status,
+        decoded_word=decoded,
+    )
+
+
+@router.get("/shaders/stray-batch", response_model=List[ShaderAnalysisResponse])
+async def get_stray_shaders_batch(
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Retrieve recompiler analysis for Stray (PPSA02100 v1.05) UE4 pixel shaders (issue #2548)."""
+    reports = shader_analyzer_singleton.get_stray_catalog_shaders()
+    return [
+        ShaderAnalysisResponse(
+            shader_address=r.shader_address,
+            title_id=r.title_id,
+            ancillary_vgpr=r.ancillary_vgpr,
+            has_ancillary_access=r.has_ancillary_access,
+            extracted_fields=r.extracted_fields,
+            register_reused=r.register_reused,
+            live_use_chain=r.live_use_chain,
+            unsupported_bit_access=r.unsupported_bit_access,
+            rebuildable_pr1179=r.rebuildable_pr1179,
+            rejection_reason=r.rejection_reason,
+            status=r.status,
+            decoded_word=None,
+        )
+        for r in reports
+    ]

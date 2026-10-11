@@ -190,4 +190,76 @@ def test_integration_workflow_http_boundary(client, operator_headers):
     # 6. Analytics endpoint returns grounded metrics
     analytics_res = client.get("/api/v1/analytics", headers=operator_headers).json()
     assert analytics_res["metrics"]["f1"] > 0.0
+    assert "shader_diagnostics" in analytics_res
+
+
+def test_shaders_rdna2_layout_endpoint(client, operator_headers):
+    """Test retrieving RDNA2 ancillary VGPR layout specification."""
+    res = client.get("/api/v1/shaders/rdna2-layout", headers=operator_headers)
+    assert res.status_code == 200
+    layout = res.json()
+    assert len(layout) > 0
+    names = [item["name"] for item in layout]
+    assert "render_target_index" in names
+    assert "sample_index" in names
+    assert "prim_type" in names
+    rt = next(i for i in layout if i["name"] == "render_target_index")
+    assert rt["offset"] == 16
+    assert rt["modeled"] is True
+
+
+def test_shaders_analyze_endpoint_rebuildable(client, operator_headers):
+    """Test analyzing a shader with clean bitfield extractions."""
+    payload = {
+        "shader_address": "0x1000",
+        "title_id": "PPSA00001",
+        "ancillary_vgpr": "v4",
+        "instructions": [
+            {"index": 0, "opcode": "BitFieldUExtract", "dest": "v0", "sources": ["v4"], "bit_offset": 16, "bit_length": 11},
+            {"index": 1, "opcode": "BitFieldUExtract", "dest": "v1", "sources": ["v4"], "bit_offset": 8, "bit_length": 4},
+        ],
+        "raw_word": 0x00050200,
+    }
+    res = client.post("/api/v1/shaders/analyze", json=payload, headers=operator_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "rebuildable"
+    assert data["rebuildable_pr1179"] is True
+    assert data["decoded_word"] is not None
+    assert data["decoded_word"]["sample_index"]["value"] == 2
+    assert data["decoded_word"]["render_target_index"]["value"] == 5
+
+
+def test_shaders_analyze_endpoint_live_use_rejection(client, operator_headers):
+    """Test analyzing a shader with UE4 register reuse (issue #2548)."""
+    payload = {
+        "shader_address": "0x200e370000",
+        "title_id": "PPSA02100",
+        "ancillary_vgpr": "v4",
+        "instructions": [
+            {"index": 0, "opcode": "BitFieldUExtract", "dest": "vN", "sources": ["v4"], "bit_offset": 16, "bit_length": 11},
+            {"index": 1, "opcode": "SelectU32", "dest": "v4", "sources": ["v4", "SelectU32 ? ?"], "condition": "IEqual32(HelperInvocation, 0)"},
+            {"index": 2, "opcode": "Phi", "dest": "v4_phi", "sources": ["v4"]},
+            {"index": 3, "opcode": "BitCastF32U32", "dest": "f_val", "sources": ["v4_phi"]},
+            {"index": 4, "opcode": "PackFloat2x16Rtz", "dest": "packed_attr", "sources": ["f_val"]},
+            {"index": 5, "opcode": "SetAttribute", "dest": None, "sources": ["packed_attr"]},
+        ],
+    }
+    res = client.post("/api/v1/shaders/analyze", json=payload, headers=operator_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "rejected_unsupported_live_use"
+    assert data["rebuildable_pr1179"] is False
+    assert data["register_reused"] is True
+    assert "SelectU32" in data["live_use_chain"]
+
+
+def test_shaders_stray_batch_endpoint(client, operator_headers):
+    """Test retrieving batch analysis for Stray (PPSA02100) catalog shaders."""
+    res = client.get("/api/v1/shaders/stray-batch", headers=operator_headers)
+    assert res.status_code == 200
+    shaders = res.json()
+    assert len(shaders) == 26
+    assert all(s["title_id"] == "PPSA02100" for s in shaders)
+    assert all(s["status"] == "rejected_unsupported_live_use" for s in shaders)
 

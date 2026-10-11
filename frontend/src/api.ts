@@ -80,6 +80,7 @@ export interface AnalyticsData {
     stability_score?: number
   }
   adversarial_stability?: string
+  shader_diagnostics?: string
 }
 
 export interface AdversarialSymbol {
@@ -165,5 +166,58 @@ export const runStressTest = async (category?: string): Promise<StressTestResult
   const response = await api.post("/adversarial/stress-test", null, {
     params: category ? { category } : undefined
   })
+  return response.data
+}
+
+export interface BitfieldLayoutItem {
+  name: string
+  offset: number
+  length: number
+  modeled: boolean
+  source_builtin: string | null
+  description: string
+}
+
+export interface ShaderAnalysisResponse {
+  shader_address: string
+  title_id: string
+  ancillary_vgpr: string
+  has_ancillary_access: boolean
+  extracted_fields: string[]
+  register_reused: boolean
+  live_use_chain: string[]
+  unsupported_bit_access: boolean
+  rebuildable_pr1179: boolean
+  rejection_reason: string | null
+  status: string
+  decoded_word?: Record<string, { offset: number; length: number; value: number; modeled: boolean; source: string | null }>
+}
+
+export const getRDNA2Layout = async (): Promise<BitfieldLayoutItem[]> => {
+  const response = await api.get('/shaders/rdna2-layout')
+  return response.data
+}
+
+export const analyzeShader = async (payload: {
+  shader_address?: string
+  title_id?: string
+  ancillary_vgpr?: string
+  instructions?: Array<{
+    index: number
+    opcode: string
+    dest?: string | null
+    sources: string[]
+    bit_offset?: number | null
+    bit_length?: number | null
+    condition?: string | null
+  }>
+  raw_word?: number | null
+}): Promise<ShaderAnalysisResponse> => {
+  const response = await api.post('/shaders/analyze', payload)
+  return response.data
+}
+
+export const getStrayShadersBatch = async (): Promise<ShaderAnalysisResponse[]> => {
+  const response = await api.get('/shaders/stray-batch')
   return response.data
 }
