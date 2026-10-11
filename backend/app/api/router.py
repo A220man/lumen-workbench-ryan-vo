@@ -21,7 +21,6 @@ from ...services.adversarial import AdversarialGenerator, run_stress_test
 from ...services.shader_analyzer import RDNA2ShaderAnalyzer, IRInstruction, RDNA2_ANCILLARY_LAYOUT
 from ...services.structurizer import CFGStructurizerAnalyzer
 from ...services.storage_writeback import StorageWritebackAnalyzer, StorageWritebackConfig, CPUWriteEvent
-from ...services.intel_gpu import IntelGpuCompatAnalyzer
 from .auth import get_current_user, require_role
 
 router = APIRouter(tags=["API"])
@@ -30,7 +29,6 @@ adversarial_generator_singleton = AdversarialGenerator()
 shader_analyzer_singleton = RDNA2ShaderAnalyzer()
 structurizer_analyzer_singleton = CFGStructurizerAnalyzer()
 storage_writeback_analyzer_singleton = StorageWritebackAnalyzer()
-intel_gpu_analyzer_singleton = IntelGpuCompatAnalyzer()
 
 class RunEvaluationRequest(BaseModel):
     title_name: Optional[str] = None; title_id: Optional[int] = None
@@ -122,7 +120,6 @@ async def get_analytics(db: Session = Depends(get_db), user: Dict[str, Any] = De
     stray = shader_analyzer_singleton.get_stray_catalog_shaders()
     cfg = structurizer_analyzer_singleton.analyze_cfg("issue_2642_repro", structurizer_analyzer_singleton.get_issue_2642_graph())
     swb = storage_writeback_analyzer_singleton.analyze()
-    intel_rep = intel_gpu_analyzer_singleton.run_diagnostics()
     top_lib = max(m.per_library.items(), key=lambda x: x[1].get("tp", 0))[0] if m.per_library else "libkernel"
     total = db.execute(select(func.count(ImportRecord.id))).scalar() or 0
     return {
@@ -135,7 +132,6 @@ async def get_analytics(db: Session = Depends(get_db), user: Dict[str, Any] = De
         "shader_diagnostics": f"{sum(1 for s in stray if s.status == 'rejected_unsupported_live_use')}/{len(stray)} Stray UE4 shaders deferred (issue #2548 unsupported live use)",
         "structurizer_diagnostics": f"Issue #2642 repro: {cfg.status} ({cfg.current_blocks}/{cfg.original_blocks} blocks, budget {cfg.split_budget})",
         "storage_writeback_diagnostics": f"Silksong (issue #865): {swb.status} ({len(swb.block_policy_dropped_units)} 64K edge drops vs 0 at 4K page granularity)",
-        "intel_gpu_diagnostics": f"Intel UHD 770 (issue #2114): {intel_rep.baseline_failed} execution test failures resolved with workbench fixes",
     }
 
 class ShaderAnalyzeInstruction(BaseModel):
@@ -195,24 +191,3 @@ async def get_storage_writeback_presets(user: Dict[str, Any] = Depends(get_curre
         {"id": "silksong-sdf-atlas", "name": "Silksong SDF Font Atlas (Issue #865)", "description": "Unaligned 512x512 R8 texture at 0x25e042000 dropped by 64 KiB block StoredOver", "texture_address": 0x25E042000, "texture_size": 0x40000, "expected_status": "conflict_detected"},
         {"id": "aligned-baseline", "name": "Aligned 64 KiB Texture Baseline", "description": "64 KiB aligned texture with no adjacent sharing allocations", "texture_address": 0x25E040000, "texture_size": 0x40000, "expected_status": "clean"},
     ]
-
-@router.get("/intel-gpu/profiles")
-async def get_intel_gpu_profiles(user: Dict[str, Any] = Depends(get_current_user)):
-    return [p.__dict__ for p in intel_gpu_analyzer_singleton.get_profiles()]
-
-@router.get("/intel-gpu/diagnostics")
-async def get_intel_gpu_diagnostics(gpu_id: str = "intel_uhd_770", apply_fixes: bool = False, user: Dict[str, Any] = Depends(get_current_user)):
-    rep = intel_gpu_analyzer_singleton.run_diagnostics(gpu_id=gpu_id, apply_fixes=apply_fixes)
-    d = rep.__dict__.copy()
-    d["diagnostics"] = [t.__dict__ for t in rep.diagnostics]
-    return d
-
-class IntelGpuSimulateRequest(BaseModel):
-    test_id: str = "vop1_float_unary"; gpu_id: str = "intel_uhd_770"; apply_fix: bool = False
-
-@router.post("/intel-gpu/simulate")
-async def simulate_intel_gpu_test(payload: IntelGpuSimulateRequest, user: Dict[str, Any] = Depends(require_role(["operator", "admin"]))):
-    try:
-        return intel_gpu_analyzer_singleton.diagnose_test(payload.test_id, payload.gpu_id, payload.apply_fix).__dict__
-    except KeyError:
-        raise HTTPException(400, f"Unknown test_id: {payload.test_id}")
