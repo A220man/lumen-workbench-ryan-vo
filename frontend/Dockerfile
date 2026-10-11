@@ -2,16 +2,17 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files first for better caching
-COPY frontend/package.json* ./
-COPY frontend/tsconfig.json* ./
-COPY frontend/vite.config.ts* ./
+# Copy package and lock files
+COPY frontend/package.json frontend/package-lock.json* ./
+COPY frontend/tsconfig.json ./
+COPY frontend/vite.config.ts ./
+COPY frontend/index.html ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (build requires devDependencies like vite and tsc)
+RUN npm ci
 
 # Copy source code
-COPY frontend/src/ ./frontend/src/
+COPY frontend/src/ ./src/
 
 # Build the application
 RUN npm run build
@@ -20,12 +21,12 @@ RUN npm run build
 FROM nginx:alpine AS production
 
 # Copy static files from builder
-COPY --from=builder /app/frontend/dist/ /usr/share/nginx/html/
+COPY --from=builder /app/dist/ /usr/share/nginx/html/
 
-EXPOSE 3000
+EXPOSE 80
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD wget -q --silent --fail http://localhost:3000/health || exit 1
+  CMD wget -q --silent --fail http://localhost:80/ || exit 1
 
-CMD ["nginx", "-g", "listen 80; daemon on;"]
+CMD ["nginx", "-g", "daemon off;"]

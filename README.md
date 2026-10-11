@@ -1,11 +1,9 @@
-# Lumen Workbench
+# Lumen Workbench — Ryan Vo | AI & Machine Learning
 
 > Work in progress. This checkpoint may be incomplete or fail tests. See PLAN.md and STATUS.md before use.
 
 
-Current version: `1.0.0`.
-
-Ryan Vo | AI & Machine Learning
+Current version: `1.1.0`.
 
 ## Overview
 

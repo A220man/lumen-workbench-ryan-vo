@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
-from ..core.db import Base
+from ..core.db import Base, utc_now
 
 class AuditLog(Base):
     """Represents an audit log entry."""
@@ -17,7 +17,7 @@ class AuditLog(Base):
     details = Column(Text)
     ip_address = Column(String(45))
     user_agent = Column(String(255))
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=utc_now)
 
     def __repr__(self):
         return f"<AuditLog(id={self.id}, user_id={self.user_id}, action='{self.action}')>"

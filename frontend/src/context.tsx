@@ -24,20 +24,19 @@ const AuthContext = createContext<{
   logout: () => void
 } | undefined>(undefined)
 
+// Access tokens are kept strictly in memory per owned-app security contract
 const initialState: AuthState = {
   user: null,
-  token: localStorage.getItem("auth_token"),
-  isAuthenticated: !!localStorage.getItem("auth_token"),
+  token: null,
+  isAuthenticated: false,
 }
 
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case "LOGIN":
-      localStorage.setItem("auth_token", action.payload.token)
       axios.defaults.headers.common["Authorization"] = `Bearer ${action.payload.token}`
       return { user: action.payload.user, token: action.payload.token, isAuthenticated: true }
     case "LOGOUT":
-      localStorage.removeItem("auth_token")
       delete axios.defaults.headers.common["Authorization"]
       return { user: null, token: null, isAuthenticated: false }
     default:
@@ -47,13 +46,6 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 
 export const LumenWorkbenchProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState)
-
-  useEffect(() => {
-    const token = localStorage.getItem("auth_token")
-    if (token) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`
-    }
-  }, [])
 
   const login = (token: string, user: User) => {
     dispatch({ type: "LOGIN", payload: { token, user } })

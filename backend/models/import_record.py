@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
-from ..core.db import Base
+from ..core.db import Base, utc_now
 
 class ImportRecord(Base):
     """Represents a PS5 executable import record."""
@@ -14,7 +14,7 @@ class ImportRecord(Base):
     version = Column(String(50))
     file_path = Column(String(512))
     status = Column(String(50), default="pending")  # pending, analyzing, complete, failed
-    imported_at = Column(DateTime, default=datetime.utcnow)
+    imported_at = Column(DateTime, default=utc_now)
     analyzed_by = Column(String(255))
     analysis_result = Column(String(2048))
 

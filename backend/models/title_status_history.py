@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from ..core.db import Base
+from ..core.db import Base, utc_now
 
 class TitleStatusHistory(Base):
     """Represents a status change history for a title."""
@@ -14,7 +14,7 @@ class TitleStatusHistory(Base):
     previous_status = Column(String(50))
     new_status = Column(String(50), nullable=False)
     changed_by = Column(String(255))
-    changed_at = Column(DateTime, default=datetime.utcnow)
+    changed_at = Column(DateTime, default=utc_now)
     notes = Column(String(1024))
 
     def __repr__(self):

@@ -139,4 +139,15 @@ def build_export_db() -> List[ModuleExport]:
             }),
             present=False,
         ),
+        ModuleExport(
+            module="libSceXml",
+            symbols=frozenset({
+                "sceXmlInit",
+                "sceXmlParse",
+                "sceXmlTerm",
+                "sceXmlCreateParser",
+                "sceXmlDestroyParser",
+            }),
+            present=False,  # missing system library reported in issue #2591
+        ),
     ]

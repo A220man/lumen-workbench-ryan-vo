@@ -72,3 +72,18 @@ def test_elf_parser_invalid_header():
 
     with pytest.raises(ELFError):
         parse_elf_imports(b"\x7fELF\x01\x01")  # Not ELF64 (class 1 is 32-bit)
+
+
+def test_missing_module_libscxml_resolution():
+    """Verify resolver identifies missing system libraries (issue #2591 Road of Death)."""
+    resolver = ImportResolver()
+    imports = [
+        ELFImport(name="sceXmlInit", nid=0, library="", address=0),
+        ELFImport(name="sceXmlParse", nid=0, library="", address=0),
+    ]
+    resolved = resolver.resolve_imports(imports)
+    assert len(resolved) == 2
+    for r in resolved:
+        assert r.status == "missing-module"
+        assert r.library == "libSceXml"
+

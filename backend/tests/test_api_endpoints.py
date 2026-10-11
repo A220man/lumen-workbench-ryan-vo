@@ -89,3 +89,74 @@ def test_adversarial_generation_endpoint(client, operator_headers):
     data = res.json()
     assert data["generated_count"] == 3
     assert len(data["symbols"]) == 3
+
+
+def test_system_stats_endpoint(client, operator_headers):
+    """Test retrieval of system telemetry and runtime statistics."""
+    # Create an active title to verify count
+    client.post(
+        "/api/v1/titles",
+        json={"name": "Telemetry Active Title", "status": "active"},
+        headers=operator_headers,
+    )
+    res = client.get("/api/v1/stats", headers=operator_headers)
+    assert res.status_code == 200
+    stats = res.json()
+    assert "active_titles" in stats
+    assert stats["active_titles"] >= 1
+    assert "total_imports" in stats
+    assert "resolution_rate" in stats
+    assert "evaluation_count" in stats
+    assert "%" in stats["resolution_rate"]
+
+
+def test_system_analytics_endpoint(client, operator_headers):
+    """Test retrieval of domain analytics and per-library breakdowns."""
+    res = client.get("/api/v1/analytics", headers=operator_headers)
+    assert res.status_code == 200
+    analytics = res.json()
+    assert "resolution_by_library" in analytics
+    assert "performance_trend" in analytics
+    assert "import_volume" in analytics
+    assert "per_library" in analytics
+    assert "metrics" in analytics
+    assert "f1" in analytics["metrics"]
+    assert "precision" in analytics["metrics"]
+    assert "recall" in analytics["metrics"]
+    assert "libkernel" in analytics["per_library"]
+
+
+def test_integration_workflow_http_boundary(client, operator_headers):
+    """Integration test verifying end-to-end data propagation across HTTP endpoints."""
+    # 1. Check initial stats
+    initial_stats = client.get("/api/v1/stats", headers=operator_headers).json()
+
+    # 2. Create title
+    create_res = client.post(
+        "/api/v1/titles",
+        json={"name": "Integration Target", "description": "Workflow verification", "status": "active"},
+        headers=operator_headers,
+    )
+    assert create_res.status_code == 201
+    title_id = create_res.json()["id"]
+
+    # 3. Stats reflect new active title
+    stats_after_title = client.get("/api/v1/stats", headers=operator_headers).json()
+    assert stats_after_title["active_titles"] == initial_stats["active_titles"] + 1
+
+    # 4. Run evaluation linking to this title
+    eval_res = client.post(
+        "/api/v1/evaluations/run",
+        json={"title_id": title_id},
+        headers=operator_headers,
+    )
+    assert eval_res.status_code == 200
+
+    # 5. Stats reflect incremented evaluation count
+    final_stats = client.get("/api/v1/stats", headers=operator_headers).json()
+    assert final_stats["evaluation_count"] == initial_stats["evaluation_count"] + 1
+
+    # 6. Analytics endpoint returns grounded metrics
+    analytics_res = client.get("/api/v1/analytics", headers=operator_headers).json()
+    assert analytics_res["metrics"]["f1"] > 0.0
+

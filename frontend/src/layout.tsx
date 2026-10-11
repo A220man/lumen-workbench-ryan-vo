@@ -1,5 +1,5 @@
 import React from "react"
-import { Outlet } from "react-router-dom"
+import { Link, Outlet } from "react-router-dom"
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
@@ -26,41 +26,27 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
       <nav className="mt-6 space-y-1">
-        <a
-          href="/"
+        <Link
+          to="/"
           className="block px-3 py-2 rounded-md text-sm font-medium
             bg-gray-50 text-gray-900"
         >
           Dashboard
-        </a>
-        <a
-          href="/titles"
+        </Link>
+        <Link
+          to="/titles"
           className="block px-3 py-2 rounded-md text-sm font-medium
             hover:bg-gray-100 text-gray-700"
         >
           Titles
-        </a>
-        <a
-          href="/evaluations"
+        </Link>
+        <Link
+          to="/evaluations"
           className="block px-3 py-2 rounded-md text-sm font-medium
             hover:bg-gray-100 text-gray-700"
         >
           Evaluations
-        </a>
-        <a
-          href="/imports"
-          className="block px-3 py-2 rounded-md text-sm font-medium
-            hover:bg-gray-100 text-gray-700"
-        >
-          Imports
-        </a>
-        <a
-          href="/settings"
-          className="block px-3 py-2 rounded-md text-sm font-medium
-            hover:bg-gray-100 text-gray-700"
-        >
-          Settings
-        </a>
+        </Link>
       </nav>
     </aside>
   )

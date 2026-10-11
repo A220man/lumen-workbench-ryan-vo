@@ -60,6 +60,26 @@ export interface ResolutionReport {
   blockers: string[]
 }
 
+export interface SystemStats {
+  active_titles: number
+  total_imports: number
+  resolution_rate: string
+  evaluation_count: number
+}
+
+export interface AnalyticsData {
+  resolution_by_library: string
+  performance_trend: string
+  import_volume: string
+  per_library: Record<string, { tp: number; fp: number; fn: number }>
+  metrics: {
+    precision: number
+    recall: number
+    f1: number
+    coverage: number
+  }
+}
+
 export const apiClient = api
 
 export const getTitle = async (id: number): Promise<Title> => {
@@ -91,7 +111,17 @@ export const analyzeImports = async (file: File): Promise<ResolutionReport> => {
   return response.data
 }
 
-export const runEvaluation = async (titleName: string): Promise<any> => {
-  const response = await api.post("/evaluations/run", { title_name: titleName })
+export const runEvaluation = async (titleName?: string, titleId?: number): Promise<any> => {
+  const response = await api.post("/evaluations/run", { title_name: titleName, title_id: titleId })
+  return response.data
+}
+
+export const getStats = async (): Promise<SystemStats> => {
+  const response = await api.get("/stats")
+  return response.data
+}
+
+export const getAnalytics = async (): Promise<AnalyticsData> => {
+  const response = await api.get("/analytics")
   return response.data
 }
