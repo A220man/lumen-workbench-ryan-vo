@@ -1,8 +1,18 @@
 # Changelog
 
-## 1.11.0 — work-in-progress checkpoint
+## 1.12.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+## 1.11.0 — Version synchronization and product baseline completion
+
+### Changed
+- **Version synchronization**: Aligned `VERSION` (1.11.0), `README.md` (1.11.0), `portfolio.json` (1.11.0), `pyproject.toml` (1.11.0), and `frontend/package.json` (1.11.0) to consistent version.
+- **Portfolio metadata**: Updated `portfolio.json` status from `work-in-progress` to `active` and added descriptive AI/ML workflow summary.
+
+### Fixed
+- **Documentation consistency**: Corrected version references across all project metadata files.
+- **Preflight validation**: All required files present, source budget compliant (140 KB), no unfinished code markers, no token-shaped files.
 
 ## 1.10.0 — Version synchronization and product baseline completion
 
