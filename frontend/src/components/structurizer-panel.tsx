@@ -79,7 +79,7 @@ export const StructurizerPanel: React.FC = () => {
           <div className="space-y-4">
             {report.matches_issue_2642 && (
               <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-800">
-                <span className="font-bold">Issue #2642 Match:</span> Loop header 1 has two latches (4 and 5) with nested selection merge at block 4. Splitting cannot remove external predecessor 2.
+                <span className="font-bold">Issue #2642 Match: </span>Loop header 1 has two latches (4 and 5) with nested selection merge at block 4. Splitting cannot remove external predecessor 2.
               </div>
             )}
 

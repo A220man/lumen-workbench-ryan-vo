@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-structurizer-cfg-budget-diagnostics
+storage-texture-writeback-diagnostics
 
 ## Roadmap
 
@@ -72,4 +72,17 @@ Acceptance:
 Implementation: `backend/services/structurizer.py`, `backend/app/api/router.py`, `frontend/src/api.ts`, `frontend/src/components/structurizer-panel.tsx`, `frontend/src/App.tsx`, `frontend/src/layout.tsx`
 
 Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `frontend/tests/structurizer.test.tsx`
+
+### storage-texture-writeback-diagnostics — Storage texture write-back cache conflict and 4 KiB page granularity diagnostics
+
+Status: done
+
+Acceptance:
+- Model 64 KiB block vs 4 KiB page write-back conflict detection for unaligned GPU storage textures (issue #865, Silksong PPSA12544)
+- Diagnose false-positive CPU stamp overwrites on edge blocks discarding GPU SDF font atlas results
+- Simulate 4 KiB page-level granularity and APS5_EAGER_WRITEBACK policies preventing glyph box corruption
+
+Implementation: `backend/services/storage_writeback.py`, `backend/app/api/router.py`, `frontend/src/api.ts`, `frontend/src/components/storage-writeback.tsx`, `frontend/src/App.tsx`, `frontend/src/layout.tsx`
+
+Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `frontend/tests/storage-writeback.test.tsx`
 

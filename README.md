@@ -3,7 +3,7 @@
 > Work in progress. This checkpoint may be incomplete or fail tests. See PLAN.md and STATUS.md before use.
 
 
-Current version: `1.2.0`.
+Current version: `1.6.0`.
 
 ## Overview
 
@@ -47,6 +47,16 @@ The evaluation engine compares resolver predictions against a grounded truth dat
 - Detect register reuse patterns in Unreal Engine 4 shaders (Stray, PPSA02100 v1.05) where `SelectU32(HelperInvocation, ...)` propagates raw ancillary words into downstream attributes
 - Track live use chains (`Phi`, `BitCastF32U32`, `PackFloat2x16Rtz`, `SetAttribute`) and evaluate PR #1179 rebuildability
 - Interactive bitfield reconstruction and decoding workbench in UI
+
+### 5. Structurizer CFG Budget Diagnostics (Issue #2642)
+- Diagnose control-flow graph structurizer failures caused by multi-latch loops with nested selection joins
+- Detect synthetic merge splitting recursion budget exhaustion (`splitBudget = originalBlocks * 4`) reproducing issue #2642 and issue #2523 stop 9
+- Compute CFG complexity metrics, identify shared latch conflicts, and recommend decoupling loop joins
+
+### 6. Storage Texture Write-Back Diagnostics (Issue #865)
+- Model 64 KiB block vs 4 KiB page granularity write-back cache conflict detection for unaligned GPU storage textures in Hollow Knight: Silksong (PPSA12544, Unity TextCore)
+- Diagnose false-positive CPU stamp overwrites on edge blocks discarding GPU SDF font atlas results and rendering menu letters as solid boxes
+- Simulate 4 KiB page-level granularity and `APS5_EAGER_WRITEBACK=1` policies preventing glyph box corruption
 
 ### Authentication & Authorization
 - Secure OIDC login through Keycloak (state + nonce + PKCE)

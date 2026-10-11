@@ -3,7 +3,7 @@ import { useAuth } from "../hooks"
 import { apiClient } from "../api"
 
 export const StatusPanel: React.FC = () => {
-  const { user, checkRole } = useAuth()
+  const { checkRole } = useAuth()
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -22,72 +22,22 @@ export const StatusPanel: React.FC = () => {
         setLoading(false)
       }
     }
-
-    if (checkRole("viewer")) {
-      fetchStats()
-    }
+    if (checkRole("viewer")) fetchStats()
+    else setLoading(false)
   }, [checkRole])
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <h3 className="font-medium text-gray-900">System Status</h3>
-        <div className="space-y-2 animate-pulse">
-          <div className="flex justify-between">
-            <span className="text-sm">Active Titles</span>
-            <span className="font-mono">Loading...</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm">Resolved Imports</span>
-            <span className="font-mono">Loading...</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm">Evaluation Count</span>
-            <span className="font-mono">Loading...</span>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="space-y-4">
-        <h3 className="font-medium text-gray-900">System Status</h3>
-        <div className="text-center text-red-500 py-4">Error: {error}</div>
-      </div>
-    )
-  }
-
-  if (!stats) {
-    return (
-      <div className="space-y-4">
-        <h3 className="font-medium text-gray-900">System Status</h3>
-        <div className="text-center text-gray-500 py-4">No data available</div>
-      </div>
-    )
-  }
+  if (loading) return <div className="space-y-4"><h3 className="font-medium text-gray-900">System Status</h3><div className="animate-pulse text-sm">Loading...</div></div>
+  if (error) return <div className="space-y-4"><h3 className="font-medium text-gray-900">System Status</h3><div className="text-center text-red-500 py-4">Error: {error}</div></div>
+  if (!stats) return <div className="space-y-4"><h3 className="font-medium text-gray-900">System Status</h3><div className="text-center text-gray-500 py-4">No status data</div></div>
 
   return (
     <div className="space-y-4">
       <h3 className="font-medium text-gray-900">System Status</h3>
       <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span>Active Titles</span>
-          <span className="font-mono">{stats.active_titles || 0}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span>Total Imports</span>
-          <span className="font-mono">{stats.total_imports || 0}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span>Resolution Rate</span>
-          <span className="font-mono">{stats.resolution_rate || "0%"}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span>Evaluations</span>
-          <span className="font-mono">{stats.evaluation_count || 0}</span>
-        </div>
+        <div className="flex justify-between items-center"><span className="text-sm text-gray-500">Active Titles</span><span className="font-mono text-sm font-bold text-gray-900">{stats.active_titles}</span></div>
+        <div className="flex justify-between items-center"><span className="text-sm text-gray-500">Resolved Imports</span><span className="font-mono text-sm font-bold text-gray-900">{stats.total_imports}</span></div>
+        <div className="flex justify-between items-center"><span className="text-sm text-gray-500">Resolution Rate</span><span className="font-mono text-sm font-bold text-gray-900">{stats.resolution_rate}</span></div>
+        <div className="flex justify-between items-center"><span className="text-sm text-gray-500">Evaluation Count</span><span className="font-mono text-sm font-bold text-gray-900">{stats.evaluation_count}</span></div>
       </div>
     </div>
   )

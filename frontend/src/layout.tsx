@@ -16,6 +16,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <Link to="/evaluations" className="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 text-gray-700">Evaluations</Link>
             <Link to="/shaders" className="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 text-gray-700">Shaders</Link>
             <Link to="/structurizer" className="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 text-gray-700">Structurizer</Link>
+            <Link to="/storage-writeback" className="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 text-gray-700">Writeback</Link>
           </nav>
         </aside>
         <main className="flex-1 overflow-y-auto p-6">
