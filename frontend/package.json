@@ -1,6 +1,6 @@
 {
   "name": "lumen-workbench-frontend",
-  "version": "1.17.0",
+  "version": "1.18.0",
   "private": true,
   "description": "Lumen Workbench - AI/ML developer tools for PS5 executable porting analysis",
   "scripts": {

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lumen-workbench"
-version = "1.17.0"
+version = "1.18.0"
 description = "AI/ML developer tools for PS5 executable porting analysis"
 readme = "README.md"
 license = {text = "MIT"}
