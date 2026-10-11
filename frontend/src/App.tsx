@@ -10,6 +10,7 @@ import { ProfilePanel } from "./components/profile"
 import { ShaderAnalyzerPanel } from "./components/shader-analyzer"
 import { StructurizerPanel } from "./components/structurizer-panel"
 import { StorageWritebackPanel } from "./components/storage-writeback"
+import { ImportAnalysis } from "./components/import-analysis"
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/titles" element={<Dashboard />} />
                   <Route path="/evaluations" element={<EvaluationTable />} />
+                  <Route path="/imports/analyze" element={<ImportAnalysis />} />
                   <Route path="/shaders" element={<ShaderAnalyzerPanel />} />
                   <Route path="/structurizer" element={<StructurizerPanel />} />
                   <Route path="/storage-writeback" element={<StorageWritebackPanel />} />
