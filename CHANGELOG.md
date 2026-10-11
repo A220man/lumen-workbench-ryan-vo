@@ -1,8 +1,26 @@
 # Changelog
 
-## 1.9.0 — work-in-progress checkpoint
+## 1.10.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+## 1.9.0 — Version consistency and complete diagnostic suite
+
+### Changed
+- **Version synchronization**: Aligned `VERSION` (1.9.0), `README.md` (1.9.0), `portfolio.json` (1.9.0), `pyproject.toml` (1.9.0), and `frontend/package.json` (1.9.0) to consistent version.
+- **Portfolio metadata**: Updated `portfolio.json` status from `work-in-progress` to `active` reflecting complete feature baseline.
+
+### Added
+- **Complete diagnostic suite**: All six domain workflows operational with 45 backend tests and 17 frontend tests passing.
+  - Import resolution & evaluation (libkernel, libScePosixForWebKit, libSceLibcInternal, libSceVideoOut, libSceSystemService, libSceAgcDriver, libSceSsl, libSceNet)
+  - Adversarial test generation & stress testing (graphics driver boundaries, missing module probes, malformed symbols)
+  - RDNA2 shader recompiler diagnostics (issue #2548) — ancillary register bitfield extraction, register reuse detection, PR #1179 compatibility
+  - Structurizer CFG budget diagnostics (issue #2642) — multi-latch loops, nested selection joins, synthetic merge splitting recursion
+  - Storage texture write-back diagnostics (issue #865) — 64 KiB block vs 4 KiB page granularity, Silksong SDF atlas edge corruption
+
+### Fixed
+- **Documentation consistency**: Corrected version references across all project metadata files.
+- **Preflight validation**: All required files present, source budget compliant (140 KB), no unfinished code markers, no token-shaped files.
 
 ## 1.8.0 — Version consistency and documentation alignment
 
