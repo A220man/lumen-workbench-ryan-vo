@@ -9,18 +9,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: lumen
-          POSTGRES_USER: lumen
-          POSTGRES_PASSWORD: changeme
-        ports:
-          - 5432:5432
-        options: --health-cmd "pg_isready -U lumen" --health-interval 10s --health-timeout 5s --health-retries 5 --health-start-period 30s
     env:
-      DATABASE_URL: postgresql://lumen:changeme@localhost:5432/lumen
+      DATABASE_URL: "sqlite:///:memory:"
       OIDC_ENABLED: "false"
       LUMEN_DEBUG: "true"
       LUMEN_DEMO_MODE: "true"
