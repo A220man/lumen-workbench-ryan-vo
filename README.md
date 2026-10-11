@@ -3,10 +3,6 @@
 > Work in progress. This checkpoint may be incomplete or fail tests. See PLAN.md and STATUS.md before use.
 
 
-> Version 1.14.0 — AI/ML developer tools for PS5 executable porting with adversarial evaluation.
-
-
-Current version: `1.14.0`.
 
 ## Overview
 
@@ -193,7 +189,7 @@ graph TB
 
 ## SSO/SAML Setup
 
-Keycloak supports upstream SAML IdPs through identity brokeling:
+Keycloak supports upstream SAML IdPs through identity brokering:
 
 1. Configure Keycloak realm with SAML identity provider
 2. Set `OIDC_PROVIDER_URL` to your Keycloak realm
