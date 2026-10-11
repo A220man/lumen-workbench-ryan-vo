@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-import-analysis-workflow
+version-synchronization-1-17-0
 
 ## Roadmap
 
@@ -86,21 +86,6 @@ Implementation: `backend/services/storage_writeback.py`, `backend/app/api/router
 
 Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `frontend/tests/storage-writeback.test.tsx`
 
-### version-synchronization-baseline-complete — Version synchronization and product baseline completion
-
-Status: done
-
-Acceptance:
-- All metadata files (VERSION, README.md, portfolio.json, pyproject.toml, frontend/package.json) show consistent version 1.13.0
-- portfolio.json status updated from work-in-progress to active
-- CHANGELOG.md documents 1.13.0 release with complete diagnostic suite summary
-- All 47 backend tests and 17 frontend tests continue to pass
-- Preflight validation passes with zero missing files and source within budget
-
-Implementation: `README.md`, `portfolio.json`, `pyproject.toml`, `frontend/package.json`, `CHANGELOG.md`, `feature-plan.json`
-
-Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `backend/tests/test_auth.py`, `frontend/tests/`
-
 ### opus-decoder-adversarial-boundary-cases — Opus decoder adversarial boundary cases and missing-module probes (issue #1578)
 
 Status: done
@@ -113,22 +98,6 @@ Acceptance:
 Implementation: `backend/services/adversarial.py`, `backend/tests/test_domain_engine.py`
 
 Tests: `backend/tests/test_domain_engine.py::test_adversarial_opus_decoder_boundary_cases`, `backend/tests/test_domain_engine.py::test_adversarial_opus_decoder_missing_module_probes`
-
-### version-sync-and-ci-optimization — Version synchronization to 1.14.0, portfolio.json activation, and CI workflow optimization
-
-Status: done
-
-Acceptance:
-- All metadata files synchronized to version 1.14.0 (VERSION, README.md, portfolio.json, pyproject.toml, frontend/package.json)
-- portfolio.json status updated from work-in-progress to active with descriptive AI/ML workflow summary
-- CI workflow optimized by removing unused PostgreSQL service (tests use SQLite)
-- CHANGELOG.md updated with proper 1.14.0 release notes
-- All 47 backend tests and 17 frontend tests pass
-- Preflight validation passes with zero missing files and source within budget
-
-Implementation: `README.md`, `portfolio.json`, `pyproject.toml`, `frontend/package.json`, `CHANGELOG.md`, `.github/workflows/ci.yml`
-
-Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `backend/tests/test_auth.py`, `frontend/tests/`
 
 ### import-analysis-workflow — ELF Import Analysis UI workflow
 
@@ -144,4 +113,30 @@ Acceptance:
 Implementation: `frontend/src/components/import-analysis.tsx`, `frontend/src/App.tsx`, `frontend/src/layout.tsx`
 
 Tests: `frontend/tests/import-analysis.test.tsx`
+
+### version-synchronization-1-17-0 — Version synchronization to 1.17.0, portfolio.json activation, and product baseline completion
+
+Status: done
+
+Acceptance:
+- All metadata files synchronized to version 1.17.0 (VERSION, README.md, portfolio.json, pyproject.toml, frontend/package.json)
+- portfolio.json status updated from work-in-progress to active with descriptive AI/ML workflow summary
+- README work-in-progress banner removed
+- CHANGELOG.md updated with proper 1.17.0 release notes
+- All 47 backend tests and 20 frontend tests pass
+- Preflight validation passes with zero missing files and source within budget
+
+Implementation: `README.md`, `portfolio.json`, `pyproject.toml`, `frontend/package.json`, `CHANGELOG.md`, `feature-plan.json`, `STATUS.md`
+
+Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `backend/tests/test_auth.py`, `frontend/tests/`
+
+### ci-docker-optimization — CI and Docker optimization - remove unused PostgreSQL service
+
+Status: planned
+
+Acceptance:
+- Remove PostgreSQL service from compose.yaml (tests use SQLite in-memory)
+- Update CI workflow to not depend on PostgreSQL/Keycloak services
+- Reduce CI runtime and resource usage
+- Verify all tests still pass with simplified CI
 

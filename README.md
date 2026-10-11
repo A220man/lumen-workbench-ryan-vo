@@ -3,7 +3,6 @@
 > Work in progress. This checkpoint may be incomplete or fail tests. See PLAN.md and STATUS.md before use.
 
 
-
 ## Overview
 
 Lumen Workbench is an AI/ML developer tool designed for automatic PS5 executable porting to Linux and Windows systems. This workbench provides a comprehensive platform for analyzing PS5 binaries, resolving import tables against host library exports, and evaluating the performance of import resolution against a labeled community dataset.
