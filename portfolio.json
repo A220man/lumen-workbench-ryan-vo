@@ -4,9 +4,9 @@
   "owner": "A220man",
   "email": "ryandtvo@gmail.com",
   "domain": "AI/ML developer tools",
-  "summary": "Work in progress: lumen-workbench-ryan-vo",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "status": "work-in-progress",
+  "summary": "Work in progress: lumen-workbench-ryan-vo",
   "workflows": [
     "Analyze PS5 ELF imports and resolve against host library exports",
     "Evaluate resolver performance against labeled community audit dataset",
