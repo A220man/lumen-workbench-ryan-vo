@@ -5,10 +5,10 @@ import { apiClient, ResolutionReport, analyzeImports } from "../api"
 export const ImportAnalysis: React.FC = () => {
   const { checkRole, isAuthenticated } = useAuth()
   const [file, setFile] = useState<File | null>(null)
+  const [explain, setExplain] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [report, setReport] = useState<ResolutionReport | null>(null)
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!file) {
@@ -18,7 +18,7 @@ export const ImportAnalysis: React.FC = () => {
     setLoading(true)
     setError(null)
     try {
-      const result = await analyzeImports(file)
+      const result = await analyzeImports(file, explain)
       setReport(result)
     } catch (err) {
       setError((err as Error).message)
@@ -52,8 +52,18 @@ export const ImportAnalysis: React.FC = () => {
             disabled={loading}
             required
           />
-          {file && <p className="mt-1 text-sm text-gray-500">Selected: {file.name} ({file.size} bytes)</p>}
         </div>
+        {file && <p className="mt-1 text-sm text-gray-500">Selected: {file.name} ({file.size} bytes)</p>}
+
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={explain}
+            onChange={(e) => setExplain(e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          Generate advisory explanation (requires LLM_API_KEY)
+        </label>
 
         <button
           type="submit"
@@ -98,6 +108,13 @@ export const ImportAnalysis: React.FC = () => {
                   <li className="text-sm text-yellow-600">... and {report.blockers.length - 10} more</li>
                 )}
               </ul>
+            </div>
+          )}
+
+          {report.advisory && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-800 mb-2">Advisory Explanation</h3>
+              <p className="text-sm text-blue-700 whitespace-pre-wrap">{report.advisory}</p>
             </div>
           )}
 
