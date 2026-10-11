@@ -1,9 +1,23 @@
 # Changelog
 
-## 1.13.0 — work-in-progress checkpoint
+## 1.14.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
 
+## 1.13.0 — Opus decoder adversarial boundary cases and version synchronization
+
+### Added
+- **Opus decoder adversarial test cases** (issue #1578): Expanded `AdversarialGenerator` with 12 missing-module probes for `libSceOpusDec` and `libSceOpusCeltDec` (`CreateEx`, `Decode`, `Destroy`, `GetSize`, `Initialize`, `Terminate` each), plus 3 synthetic boundary probes (`sceOpusDecoderCreate`, `sceOpusDecoderDecodeFrame`, `sceOpusCeltDecoderInit`) in new `opus_decoder_boundary` category.
+- **Backend tests**: Added `test_adversarial_opus_decoder_boundary_cases` and `test_adversarial_opus_decoder_missing_module_probes` verifying Opus decoder category synthesis and missing-module detection.
+
+### Changed
+- **Version synchronization**: Aligned `VERSION` (1.13.0), `README.md` (1.13.0), `portfolio.json` (1.13.0), `pyproject.toml` (1.13.0), and `frontend/package.json` (1.13.0) to consistent version.
+- **Portfolio metadata**: Updated `portfolio.json` status to `active` with descriptive AI/ML workflow summary.
+- **README**: Updated adversarial feature description and measured performance to include `opus_decoder_boundary` category (100% stability across 22 synthetic probes).
+
+### Fixed
+- **Documentation consistency**: Corrected version references across all project metadata files.
+- **Preflight validation**: All required files present, source budget compliant (140 KB), no unfinished code markers, no token-shaped files.
 ## 1.12.0 — Complete diagnostic suite and version synchronization
 
 ### Changed

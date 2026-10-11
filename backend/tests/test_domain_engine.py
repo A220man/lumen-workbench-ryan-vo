@@ -308,6 +308,30 @@ def test_storage_writeback_aligned_baseline():
     assert report.page_policy_corrupted is False
     assert report.edge_blocks_count == 0
     assert report.status == "clean"
+def test_adversarial_opus_decoder_boundary_cases():
+    """Verify adversarial generator synthesizes Opus decoder boundary imports (issue #1578)."""
+    from backend.services.adversarial import AdversarialGenerator
+    gen = AdversarialGenerator()
+    cases = gen.generate_cases(category="opus_decoder_boundary", count=20)
+    assert len(cases) >= 3
+    opus_symbols = {c.symbol for c in cases}
+    assert "sceOpusDecoderCreate" in opus_symbols
+    assert "sceOpusDecoderDecodeFrame" in opus_symbols
+    assert "sceOpusCeltDecoderInit" in opus_symbols
+    for c in cases:
+        assert c.expected_status == "unresolved"
+        assert c.category == "opus_decoder_boundary"
+
+def test_adversarial_opus_decoder_missing_module_probes():
+    """Verify adversarial generator includes missing-module probes for libSceOpusDec and libSceOpusCeltDec."""
+    from backend.services.adversarial import AdversarialGenerator
+    gen = AdversarialGenerator()
+    cases = gen.generate_cases(category="missing_module_probe", count=20)
+    opus_cases = [c for c in cases if c.target_library in ("libSceOpusDec", "libSceOpusCeltDec")]
+    assert len(opus_cases) == 12  # 6 functions each for OpusDec and OpusCeltDec
+    for c in opus_cases:
+        assert c.expected_status == "missing-module"
+        assert c.target_library in ("libSceOpusDec", "libSceOpusCeltDec")
 
 
 

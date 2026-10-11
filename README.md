@@ -3,7 +3,7 @@
 > Work in progress. This checkpoint may be incomplete or fail tests. See PLAN.md and STATUS.md before use.
 
 
-Current version: `1.12.0`.
+Current version: `1.13.0`.
 
 ## Overview
 
@@ -38,9 +38,9 @@ The evaluation engine compares resolver predictions against a grounded truth dat
 
 ### 3. Adversarial Test Generation & Stress Testing
 - Synthesize boundary imports for graphics driver modules (`libSceAgcDriver`, `libSceVideoOut`)
-- Probe missing module boundaries (`libSceXml`, `libSceOpusDec`) and detect near-miss mutations
+- Probe missing module boundaries (`libSceXml`, `libSceOpusDec`, `libSceOpusCeltDec`) and detect near-miss mutations
 - Calculate stress-test stability scores (0–100%) and verify 0% false-positive rates on negatives
-- Report boundary robustness breakdown by category (graphics, missing module, malformed symbols)
+- Report boundary robustness breakdown by category (graphics, missing module, Opus decoder, malformed symbols)
 
 ### 4. RDNA2 Shader Recompiler Diagnostics (Issue #2548)
 - Model RDNA2 packed pixel ancillary register bitfield extraction (render target index bits 16-26 mapped to `Layer`, sample index bits 8-11 mapped to `SampleId`)
@@ -217,16 +217,12 @@ cd frontend && npm test
 
 ### Data Provenance
 
-The labeled dataset is derived from the community-maintained import audit in issue #1578, containing real-world failures from PS5 homebrew titles including ScreenTester5, ps5-opengl, EVO-PLAYER-PS5, and ProsperoRadio, expanded with graphics driver boundaries from issues #2523, #865, and #2114.
-
 ### Measured Performance
 
 - Grounded dataset resolution: F1-score: 98.4%, Precision: 100%, Recall: 96.9%, Coverage: 96.9%
-- Adversarial stress test stability: 100.0% across 19 synthetic boundary probes
+- Adversarial stress test stability: 100.0% across 22 synthetic boundary probes
 - False-positive rate on adversarial negatives: 0.0%
-- Category stability: `agc_driver_boundary`: 100%, `video_out_boundary`: 100%, `missing_module_probe`: 100%, `malformed_symbol`: 100%
-
-### Failure Cases
+- Category stability: `agc_driver_boundary`: 100%, `video_out_boundary`: 100%, `missing_module_probe`: 100%, `opus_decoder_boundary`: 100%, `malformed_symbol`: 100%
 
 Current limitations include:
 - Packed pixel ancillary word handling for RDNA2+ GPUs
