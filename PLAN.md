@@ -91,9 +91,9 @@ Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.
 Status: done
 
 Acceptance:
-- All metadata files (VERSION, README.md, portfolio.json, pyproject.toml, frontend/package.json) show consistent version 1.9.0
+- All metadata files (VERSION, README.md, portfolio.json, pyproject.toml, frontend/package.json) show consistent version 1.10.0
 - portfolio.json status updated from work-in-progress to active
-- CHANGELOG.md documents 1.9.0 release with complete diagnostic suite summary
+- CHANGELOG.md documents 1.10.0 release with complete diagnostic suite summary
 - All 45 backend tests and 17 frontend tests continue to pass
 - Preflight validation passes with zero missing files and source within budget
 
