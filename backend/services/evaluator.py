@@ -111,14 +111,16 @@ def run_evaluation(resolver: ImportResolver) -> EvalMetrics:
     tp = fp = fn = 0
     per_lib: Dict[str, Dict[str, int]] = {}
     for ex in dataset:
-        pred_lib = resolver.resolve_name(ex.symbol)
-        if pred_lib == ex.expected_library:
+        sym = ex.symbol if hasattr(ex, "symbol") else ex[0]
+        exp_lib = ex.expected_library if hasattr(ex, "expected_library") else ex[1]
+        pred_lib = resolver.resolve_name(sym)
+        if pred_lib == exp_lib:
             tp += 1
-            d = per_lib.setdefault(ex.expected_library, {"tp": 0, "fp": 0, "fn": 0})
+            d = per_lib.setdefault(exp_lib, {"tp": 0, "fp": 0, "fn": 0})
             d["tp"] += 1
         else:
             fn += 1
-            d = per_lib.setdefault(ex.expected_library, {"tp": 0, "fp": 0, "fn": 0})
+            d = per_lib.setdefault(exp_lib, {"tp": 0, "fp": 0, "fn": 0})
             d["fn"] += 1
             if pred_lib:
                 d2 = per_lib.setdefault(pred_lib, {"tp": 0, "fp": 0, "fn": 0})

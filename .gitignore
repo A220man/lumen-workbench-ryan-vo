@@ -55,7 +55,6 @@ Thumbs.db
 
 # Environment
 .env
-.env.example
 .env.production
 .env.staging
 *.sqlite
@@ -83,8 +82,7 @@ jest.config.js
 vitest.config.js
 .mocharc.json
 .mocharc.yml
-test/
-tests/
+
 
 # Logs
 npm-debug.log*
