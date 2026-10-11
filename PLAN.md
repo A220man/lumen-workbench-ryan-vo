@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-advisory-ui-integration
+continue-implementation
 
 ## Roadmap
 
@@ -23,10 +23,19 @@ Implementation: `frontend/src/api.ts`, `frontend/src/components/import-analysis.
 
 Tests: `frontend/tests/import-analysis.test.tsx`
 
-### continue-implementation — Continue implementation and resolve known failures
+### continue-implementation — Complete product baseline: version sync, version metadata, and release readiness
 
-Status: planned
+Status: done
 
 Acceptance:
-- Run checks, fix failures, and implement the next planned feature
+- All version references synchronized to 1.20.0 across VERSION, pyproject.toml, package.json, portfolio.json, README
+- Portfolio status updated to active with descriptive AI/ML workflow summary
+- README work-in-progress banner removed
+- All backend tests pass (47)
+- All frontend tests pass (20)
+- Frontend build succeeds
+
+Implementation: `pyproject.toml`, `frontend/package.json`, `portfolio.json`, `README.md`, `VERSION`
+
+Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `backend/tests/test_auth.py`, `frontend/tests/import-analysis.test.tsx`
 

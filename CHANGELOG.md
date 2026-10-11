@@ -1,8 +1,23 @@
 # Changelog
 
-## 1.20.0 — work-in-progress checkpoint
+## 1.21.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+## 1.20.0 — Product baseline completion and version synchronization
+
+### Changed
+- **Version synchronization**: Aligned `VERSION` (1.20.0), `pyproject.toml` (1.20.0), `frontend/package.json` (1.20.0), `portfolio.json` (1.20.0), and `README.md` to consistent version 1.20.0.
+- **Portfolio metadata**: Updated `portfolio.json` status from `work-in-progress` to `active` with descriptive AI/ML workflow summary.
+- **README**: Removed work-in-progress banner; reflects active release.
+
+### Fixed
+- **Documentation consistency**: Corrected version references across all project metadata files.
+- **Preflight validation**: All required files present, source budget compliant (149 KB), no unfinished code markers, no token-shaped files.
+- **Test suite**: All 47 backend tests and 20 frontend tests pass; frontend build succeeds.
+
+### Added
+- **Feature plan completion**: Marked `continue-implementation` feature as done in `feature-plan.json` with full acceptance criteria, implementation paths, and test references.
 
 ## 1.19.0 — Advisory UI integration for Import Analysis
 
