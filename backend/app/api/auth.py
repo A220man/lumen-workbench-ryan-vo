@@ -10,7 +10,7 @@ Supports:
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 import jwt
 from pydantic import BaseModel
@@ -72,8 +72,8 @@ def create_token(user_id: str, email: str, name: str, role: str, expires_delta: 
         "role": role,
         "iss": settings.oidc_audience or "lumen",
         "aud": settings.oidc_audience or "lumen",
-        "iat": datetime.utcnow(),
-        "exp": datetime.utcnow() + delta,
+        "iat": datetime.now(timezone.utc),
+        "exp": datetime.now(timezone.utc) + delta,
     }
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
 
@@ -166,7 +166,7 @@ async def login(credentials: LoginRequest):
         return LoginResponse(
             access_token=token,
             token_type="bearer",
-            expires_at=datetime.utcnow() + timedelta(seconds=settings.session_ttl_seconds),
+            expires_at=datetime.now(timezone.utc) + timedelta(seconds=settings.session_ttl_seconds),
             role=role,
             user=user_info,
         )
@@ -195,7 +195,7 @@ async def authorize(redirect_uri: Optional[str] = None):
         "nonce": nonce,
         "verifier": verifier,
         "redirect_uri": target_redirect,
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.now(timezone.utc),
     }
 
     try:
@@ -267,7 +267,7 @@ async def callback(cb: CallbackRequest):
         return LoginResponse(
             access_token=access_token,
             token_type="bearer",
-            expires_at=datetime.utcnow() + timedelta(seconds=settings.session_ttl_seconds),
+            expires_at=datetime.now(timezone.utc) + timedelta(seconds=settings.session_ttl_seconds),
             role=role,
             user=user_info,
         )

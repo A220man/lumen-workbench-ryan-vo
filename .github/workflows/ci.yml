@@ -18,11 +18,7 @@ jobs:
           POSTGRES_PASSWORD: changeme
         ports:
           - 5432:5432
-        options: --health-cmd "pg_isready -U lumen" --health-interval 10s --health-timeout 5s --health-retries 5
-        options: >-
-          --health-start-period 30s
-          --health-stop-period 10s
-          --health-timeout 10s
+        options: --health-cmd "pg_isready -U lumen" --health-interval 10s --health-timeout 5s --health-retries 5 --health-start-period 30s
     env:
       DATABASE_URL: postgresql://lumen:changeme@localhost:5432/lumen
       OIDC_ENABLED: "false"

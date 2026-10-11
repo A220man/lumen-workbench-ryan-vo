@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import Column, Integer, String, DateTime, Boolean
-from ..core.db import Base
+from ..core.db import Base, utc_now
 
 class User(Base):
     """Represents a user in the lumen-workbench."""
@@ -14,8 +14,8 @@ class User(Base):
     name = Column(String(255), nullable=False)
     role = Column(String(50), default="analyst")  # analyst, viewer, admin
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', role='{self.role}')>"

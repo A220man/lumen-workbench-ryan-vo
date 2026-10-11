@@ -25,6 +25,7 @@ COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/pytho
 COPY backend/ ./backend/
 COPY pyproject.toml ./
 COPY README.md ./
+COPY VERSION ./
 
 # Create data directory and set permissions
 RUN mkdir -p /data && chown -R appuser:appgroup /data

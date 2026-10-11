@@ -1,5 +1,5 @@
 """Import record schemas for lumen-workbench-ryan-vo."""
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
 
@@ -20,5 +20,4 @@ class ImportRecordResponse(BaseModel):
     analyzed_by: Optional[str]
     analysis_result: Optional[str]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

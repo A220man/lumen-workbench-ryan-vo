@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
-from ..core.db import Base
+from ..core.db import Base, utc_now
 
 class Evaluation(Base):
     """Represents an evaluation of a title."""
@@ -13,8 +13,8 @@ class Evaluation(Base):
     title_id = Column(Integer, ForeignKey("titles.id"), nullable=False)
     score = Column(Float, nullable=False)  # 0.0 to 10.0
     comments = Column(String(2048))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
     def __repr__(self):
         return f"<Evaluation(id={self.id}, title_id={self.title_id}, score={self.score})>"

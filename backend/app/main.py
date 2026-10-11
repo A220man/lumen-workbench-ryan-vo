@@ -18,11 +18,25 @@ async def lifespan(app: FastAPI):
     # Shutdown: cleanup connections
     logger.info("Application shutdown complete")
 
+def _load_version() -> str:
+    """Read version dynamically from VERSION metadata file."""
+    version_file = os.path.join(os.path.dirname(__file__), "..", "..", "VERSION")
+    if os.path.isfile(version_file):
+        try:
+            with open(version_file, "r", encoding="utf-8") as f:
+                ver = f.read().strip()
+                if ver:
+                    return ver
+        except OSError:
+            pass
+    return "1.1.0"
+
 def get_app() -> FastAPI:
     """Factory function to create FastAPI application."""
+    app_version = _load_version()
     app = FastAPI(
         title="Lumen Workbench",
-        version="1.0.0",
+        version=app_version,
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
@@ -47,7 +61,7 @@ def get_app() -> FastAPI:
         """Root endpoint returning service info."""
         return {
             "name": "Lumen Workbench API",
-            "version": "1.0.0",
+            "version": app_version,
             "description": "AI/ML developer tools for PS5 executable porting analysis"
         }
     

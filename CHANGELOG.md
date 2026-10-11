@@ -1,8 +1,24 @@
 # Changelog
 
+## 1.2.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.1.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+### Added
+- **System Telemetry & Analytics Endpoints**: Added `GET /api/v1/stats` for real-time title counts, total imports, evaluation count, and resolution rate; added `GET /api/v1/analytics` for domain performance trends, lead module metrics, and per-library breakdowns.
+- **Missing Module Resolution**: Extended `export_db.py` with `libSceXml` definitions (`sceXmlInit`, `sceXmlParse`, etc.) to diagnose missing system library startup failures reported in community issue #2591 (Road of Death).
+- **Frontend Live Telemetry Integration**: Wired `StatusPanel` and `AnalyticsPanel` to live backend endpoints with typed response structures in `api.ts`.
+- **Application Navigation**: Implemented full React Router navigation in `App.tsx` and `layout.tsx` connecting Dashboard, EvaluationTable, StatusPanel, AnalyticsPanel, and ProfilePanel.
+- **Unit and Integration Tests**: Added backend tests for `/stats`, `/analytics`, HTTP boundary integration workflow, and `libSceXml` missing-module resolution (22 pytest tests total); added frontend component tests for `StatusPanel` and `AnalyticsPanel` (10 vitest tests total).
+
+### Changed
+- **In-Memory Token Security**: Updated auth context to retain bearer tokens strictly in memory without `localStorage` persistence, conforming to SPA PKCE security requirements.
+- **Modernized Datetime & Schemas**: Upgraded SQLAlchemy models and authentication token generation to timezone-aware UTC objects (`datetime.now(timezone.utc)`) and Pydantic v2 `model_config = ConfigDict(from_attributes=True)`.
+- **Dynamic Version Metadata**: Updated FastAPI application to read product version from `VERSION` metadata file rather than hardcoding static strings.
 
 ## 1.0.0 — work-in-progress checkpoint
 

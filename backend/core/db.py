@@ -5,8 +5,13 @@ Tests override DATABASE_URL to use an in-memory SQLite database.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
+
+def utc_now() -> datetime:
+    """Return timezone-aware current UTC datetime."""
+    return datetime.now(timezone.utc)
 
 class Base(DeclarativeBase):
     pass

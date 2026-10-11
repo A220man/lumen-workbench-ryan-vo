@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ...core.db import get_db
@@ -286,3 +286,79 @@ async def generate_adversarial_spec(
             "predicted_status": "unresolved" if not resolver_singleton.resolve_name(name) else "resolved",
         })
     return {"generated_count": len(items), "symbols": items}
+
+
+# -----------------------------------------------------------------------------
+# System Status & Telemetry Analytics
+# -----------------------------------------------------------------------------
+
+class StatsResponse(BaseModel):
+    active_titles: int
+    total_imports: int
+    resolution_rate: str
+    evaluation_count: int
+
+
+class AnalyticsResponse(BaseModel):
+    resolution_by_library: str
+    performance_trend: str
+    import_volume: str
+    per_library: Dict[str, Dict[str, int]]
+    metrics: Dict[str, float]
+
+
+@router.get("/stats", response_model=StatsResponse)
+async def get_system_stats(
+    db: Session = Depends(get_db),
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Retrieve system status metrics."""
+    active_titles = db.execute(
+        select(func.count(Title.id)).where(Title.status == "active")
+    ).scalar() or 0
+
+    total_imports = db.execute(
+        select(func.count(ImportRecord.id))
+    ).scalar() or 0
+
+    eval_count = db.execute(
+        select(func.count(Evaluation.id))
+    ).scalar() or 0
+
+    metrics = run_eval_metrics(resolver_singleton)
+    res_rate_pct = f"{metrics.coverage * 100:.1f}%"
+
+    return StatsResponse(
+        active_titles=active_titles,
+        total_imports=total_imports,
+        resolution_rate=res_rate_pct,
+        evaluation_count=eval_count,
+    )
+
+
+@router.get("/analytics", response_model=AnalyticsResponse)
+async def get_analytics(
+    db: Session = Depends(get_db),
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Retrieve resolution analytics and benchmark metrics."""
+    metrics = run_eval_metrics(resolver_singleton)
+    top_lib = (
+        max(metrics.per_library.items(), key=lambda x: x[1].get("tp", 0))[0]
+        if metrics.per_library
+        else "libkernel"
+    )
+    total_imports = db.execute(select(func.count(ImportRecord.id))).scalar() or 0
+
+    return AnalyticsResponse(
+        resolution_by_library=f"Lead module: {top_lib} ({metrics.per_library.get(top_lib, {}).get('tp', 0)} symbols)",
+        performance_trend=f"F1={metrics.f1:.3f} (coverage {metrics.coverage * 100:.1f}%)",
+        import_volume=f"{total_imports} records analyzed",
+        per_library=metrics.per_library,
+        metrics={
+            "precision": round(metrics.precision, 4),
+            "recall": round(metrics.recall, 4),
+            "f1": round(metrics.f1, 4),
+            "coverage": round(metrics.coverage, 4),
+        },
+    )
