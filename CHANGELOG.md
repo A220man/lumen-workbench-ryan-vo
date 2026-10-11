@@ -1,9 +1,20 @@
 # Changelog
 
-## 1.18.0 — work-in-progress checkpoint
+## 1.19.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
 
+## 1.18.0 — Version synchronization, CI/Docker optimization, and product baseline completion
+
+### Changed
+- **Version synchronization**: Aligned `VERSION` (1.18.0), `README.md`, `portfolio.json` (1.18.0), `pyproject.toml` (1.18.0), and `frontend/package.json` (1.18.0) to consistent version.
+- **Portfolio metadata**: Updated `portfolio.json` status from `work-in-progress` to `active` with descriptive AI/ML workflow summary.
+- **README**: Removed work-in-progress banner; reflects active release.
+- **CI/Docker optimization**: Simplified `compose.yaml` to use SQLite by default, removing PostgreSQL and Keycloak services for local development; CI workflow already uses in-memory SQLite.
+
+### Fixed
+- **Documentation consistency**: Corrected version references across all project metadata files.
+- **Preflight validation**: All required files present, source budget compliant (148 KB), no unfinished code markers, no token-shaped files.
 ## 1.17.0 — Version synchronization, portfolio activation, and product baseline completion
 
 ### Changed
