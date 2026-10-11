@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-version-synchronization-baseline-complete
+opus-decoder-adversarial-boundary-cases
 
 ## Roadmap
 
@@ -91,13 +91,26 @@ Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.
 Status: done
 
 Acceptance:
-- All metadata files (VERSION, README.md, portfolio.json, pyproject.toml, frontend/package.json) show consistent version 1.12.0
+- All metadata files (VERSION, README.md, portfolio.json, pyproject.toml, frontend/package.json) show consistent version 1.13.0
 - portfolio.json status updated from work-in-progress to active
-- CHANGELOG.md documents 1.12.0 release with complete diagnostic suite summary
-- All 45 backend tests and 17 frontend tests continue to pass
+- CHANGELOG.md documents 1.13.0 release with complete diagnostic suite summary
+- All 47 backend tests and 17 frontend tests continue to pass
 - Preflight validation passes with zero missing files and source within budget
 
 Implementation: `README.md`, `portfolio.json`, `pyproject.toml`, `frontend/package.json`, `CHANGELOG.md`, `feature-plan.json`
 
 Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `backend/tests/test_auth.py`, `frontend/tests/`
+
+### opus-decoder-adversarial-boundary-cases — Opus decoder adversarial boundary cases and missing-module probes (issue #1578)
+
+Status: done
+
+Acceptance:
+- Expand adversarial generator with 12 missing-module probes for libSceOpusDec and libSceOpusCeltDec (CreateEx, Decode, Destroy, GetSize, Initialize, Terminate each)
+- Add 3 synthetic boundary probes in new opus_decoder_boundary category (sceOpusDecoderCreate, sceOpusDecoderDecodeFrame, sceOpusCeltDecoderInit)
+- Verify stress-test stability scores include opus_decoder_boundary category at 100%
+
+Implementation: `backend/services/adversarial.py`, `backend/tests/test_domain_engine.py`
+
+Tests: `backend/tests/test_domain_engine.py::test_adversarial_opus_decoder_boundary_cases`, `backend/tests/test_domain_engine.py::test_adversarial_opus_decoder_missing_module_probes`
 
