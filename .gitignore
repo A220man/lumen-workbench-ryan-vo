@@ -1,0 +1,103 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+/yarn-error.log
+/.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+__pycache__
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.egg-info
+/dist
+/build
+/cache
+*.egg
+*.manifest
+*.spec
+
+# Python
+*.log
+.pytest_cache
+.coverage
+htmlcov
+.tox
+.nox
+.eggs
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+*.manifest
+*.spec
+logs
+*.log
+celerybeat-schedule
+
+# IDE
+.vscode
+.idea
+*.sublime-workspace
+*.sublime-project
+*.sublime-settings
+*.tmux-session
+.DS_Store
+Thumbs.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.example
+.env.production
+.env.staging
+*.sqlite
+*.sqlite3
+
+# Build artifacts
+dist/
+build/
+*.tar.gz
+*.whl
+
+# Docker
+docker-compose.override.yml
+
+# Frontend
+frontend/dist/
+frontend/node_modules/
+frontend/.vite
+frontend/.svelte-kit
+
+# Testing
+coverage/
+.jest
+jest.config.js
+vitest.config.js
+.mocharc.json
+.mocharc.yml
+test/
+tests/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Keep these files
+!.gitignore
+!.gitkeep

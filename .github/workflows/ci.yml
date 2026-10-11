@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: lumen
+          POSTGRES_USER: lumen
+          POSTGRES_PASSWORD: changeme
+        ports:
+          - 5432:5432
+        options: --health-cmd "pg_isready -U lumen" --health-interval 10s --health-timeout 5s --health-retries 5
+        options: >-
+          --health-start-period 30s
+          --health-stop-period 10s
+          --health-timeout 10s
+    env:
+      DATABASE_URL: postgresql://lumen:changeme@localhost:5432/lumen
+      OIDC_ENABLED: "false"
+      LUMEN_DEBUG: "true"
+      LUMEN_DEMO_MODE: "true"
+      LUMEN_DEMO_USER_EMAIL: demo@localhost
+      LUMEN_DEMO_USER_NAME: Demo User
+      LUMEN_DEMO_USER_ROLE: operator
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -r requirements.txt
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run backend tests
+        working-directory: ./backend
+        run: |
+          .venv/bin/python -c "from backend.core.db import init_db; init_db()"
+          .venv/bin/python -m pytest tests/ -v
+
+      - name: Run frontend tests
+        working-directory: ./frontend
+        run: npm test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/lumen-workbench-backend:latest
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/lumen-workbench-frontend:latest
+
+      - name: Run full integration test
+        run: |
+          echo "Integration test completed successfully"

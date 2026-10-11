@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (production use)
+  db:
+    image: postgres:16-alpine
+    container_name: lumen-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lumen
+      POSTGRES_USER: lumen
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lumen -d lumen"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lumen-network
+
+  # Keycloak Identity Provider
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: lumen-keycloak
+    restart: unless-stopped
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-changeme}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db:5432/lumen
+      KC_DB_USERNAME: lumen
+      KC_DB_PASSWORD: ${DB_PASSWORD:-changeme}
+      KC_HOSTNAME: localhost
+      KC_HTTP_ENABLED: "true"
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - lumen-network
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: lumen-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://lumen:${DB_PASSWORD:-changeme}@db:5432/lumen
+      OIDC_ENABLED: "true"
+      OIDC_PROVIDER_URL: http://keycloak:8080/realms/lumen
+      OIDC_CLIENT_ID: lumen-workbench
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-changeme}
+      OIDC_REDIRECT_URI: http://127.0.0.1:8000/auth/callback
+      OIDC_ALLOWED_ROLES: viewer,operator,admin
+      OIDC_DEFAULT_ROLE: viewer
+      OIDC_AUDIENCE: lumen
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai-compatible}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
+      LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-20}
+      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-512}
+      LUMEN_SECRET_KEY: ${LUMEN_SECRET_KEY:-changeme}
+      LUMEN_DEBUG: "false"
+      HOST: "0.0.0.0"
+      PORT: "8000"
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - lumen-network
+
+  # Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: lumen-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - lumen-network
+
+volumes:
+  db-data:
+    driver: local
+
+networks:
+  lumen-network:
+    driver: bridge
