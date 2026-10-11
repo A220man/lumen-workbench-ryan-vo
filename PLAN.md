@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-opus-decoder-adversarial-boundary-cases
+version-sync-and-ci-optimization
 
 ## Roadmap
 
@@ -113,4 +113,20 @@ Acceptance:
 Implementation: `backend/services/adversarial.py`, `backend/tests/test_domain_engine.py`
 
 Tests: `backend/tests/test_domain_engine.py::test_adversarial_opus_decoder_boundary_cases`, `backend/tests/test_domain_engine.py::test_adversarial_opus_decoder_missing_module_probes`
+
+### version-sync-and-ci-optimization — Version synchronization to 1.14.0, portfolio.json activation, and CI workflow optimization
+
+Status: done
+
+Acceptance:
+- All metadata files synchronized to version 1.14.0 (VERSION, README.md, portfolio.json, pyproject.toml, frontend/package.json)
+- portfolio.json status updated from work-in-progress to active with descriptive AI/ML workflow summary
+- CI workflow optimized by removing unused PostgreSQL service (tests use SQLite)
+- CHANGELOG.md updated with proper 1.14.0 release notes
+- All 47 backend tests and 17 frontend tests pass
+- Preflight validation passes with zero missing files and source within budget
+
+Implementation: `README.md`, `portfolio.json`, `pyproject.toml`, `frontend/package.json`, `CHANGELOG.md`, `.github/workflows/ci.yml`
+
+Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `backend/tests/test_auth.py`, `frontend/tests/`
 

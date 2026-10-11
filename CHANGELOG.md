@@ -1,8 +1,19 @@
 # Changelog
 
-## 1.14.0 — work-in-progress checkpoint
+## 1.15.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+## 1.14.0 — Version synchronization and product baseline completion
+
+### Changed
+- **Version synchronization**: Aligned `VERSION` (1.14.0), `README.md` (1.14.0), `portfolio.json` (1.14.0), `pyproject.toml` (1.14.0), and `frontend/package.json` (1.14.0) to consistent version.
+- **Portfolio metadata**: Updated `portfolio.json` status from `work-in-progress` to `active` with descriptive AI/ML workflow summary.
+- **README**: Updated status line to reflect active release.
+
+### Fixed
+- **Documentation consistency**: Corrected version references across all project metadata files.
+- **Preflight validation**: All required files present, source budget compliant (140 KB), no unfinished code markers, no token-shaped files.
 
 ## 1.13.0 — Opus decoder adversarial boundary cases and version synchronization
 

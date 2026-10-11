@@ -3,7 +3,10 @@
 > Work in progress. This checkpoint may be incomplete or fail tests. See PLAN.md and STATUS.md before use.
 
 
-Current version: `1.13.0`.
+> Version 1.14.0 — AI/ML developer tools for PS5 executable porting with adversarial evaluation.
+
+
+Current version: `1.14.0`.
 
 ## Overview
 
