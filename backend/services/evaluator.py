@@ -83,8 +83,14 @@ def labeled_dataset() -> List[DatasetExample]:
         ("trunc", "libSceLibcInternal"),
         ("utime", "libSceLibcInternal"),
         ("sceVideoOutGetResolutionStatus", "libSceVideoOut"),
+        ("sceVideoOutOpen", "libSceVideoOut"),
+        ("sceVideoOutRegisterBuffers", "libSceVideoOut"),
+        ("sceVideoOutSubmitFlip", "libSceVideoOut"),
         ("sceSystemServiceLaunchWebBrowser", "libSceSystemService"),
         ("sceAgcDriverGetTFRing", "libSceAgcDriver"),
+        ("sceAgcDriverSubmit", "libSceAgcDriver"),
+        ("sceAgcDriverRegisterResource", "libSceAgcDriver"),
+        ("sceAgcDriverTrackStorageImage", "libSceAgcDriver"),
     ]
 
 

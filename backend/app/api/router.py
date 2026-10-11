@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ...core.db import get_db
+from ...core.nid import nid_of
 from ...models.title import Title
 from ...models.evaluation import Evaluation
 from ...models.import_record import ImportRecord
@@ -17,10 +18,12 @@ from ...schemas.evaluation import EvaluationCreate, EvaluationResponse
 from ...services.import_resolver import ImportResolver
 from ...services.evaluator import run_evaluation as run_eval_metrics
 from ...services.advisory import build_advisor, explain_imports
+from ...services.adversarial import AdversarialGenerator, run_stress_test
 from .auth import get_current_user, require_role
 
 router = APIRouter(tags=["API"])
 resolver_singleton = ImportResolver()
+adversarial_generator_singleton = AdversarialGenerator()
 
 
 class RunEvaluationRequest(BaseModel):
@@ -267,25 +270,59 @@ async def run_evaluation_endpoint(
 
 
 # -----------------------------------------------------------------------------
-# Domain Workflow 3: Adversarial ELF Test Case Generator
+# Domain Workflow 3: Adversarial ELF Test Case Generator & Stress Testing
 # -----------------------------------------------------------------------------
 
 @router.post("/adversarial/generate")
 async def generate_adversarial_spec(
-    prefix: str = "sceKernel",
+    prefix: Optional[str] = None,
+    category: Optional[str] = None,
     count: int = 5,
     user: Dict[str, Any] = Depends(require_role(["operator", "admin"])),
 ):
     """Generate synthetic boundary test cases to probe resolver behavior."""
     items = []
-    for i in range(min(max(count, 1), 50)):
-        name = f"{prefix}_adversarial_sym_{i}"
-        items.append({
-            "name": name,
-            "nid": resolver_singleton.resolve_name(name),
-            "predicted_status": "unresolved" if not resolver_singleton.resolve_name(name) else "resolved",
-        })
+    if prefix:
+        for i in range(min(max(count, 1), 50)):
+            name = f"{prefix}_adversarial_sym_{i}"
+            lib = resolver_singleton.resolve_name(name)
+            items.append({
+                "name": name,
+                "nid": nid_of(name),
+                "predicted_status": "unresolved" if not lib else "resolved",
+                "category": category or "prefix_boundary",
+            })
+    else:
+        cases = adversarial_generator_singleton.generate_cases(category=category, count=count)
+        for c in cases:
+            items.append({
+                "name": c.symbol,
+                "nid": c.nid,
+                "predicted_status": c.expected_status,
+                "category": c.category,
+                "mutation_type": c.mutation_type,
+            })
     return {"generated_count": len(items), "symbols": items}
+
+
+@router.post("/adversarial/stress-test")
+async def run_adversarial_stress_test(
+    category: Optional[str] = None,
+    user: Dict[str, Any] = Depends(require_role(["operator", "admin"])),
+):
+    """Run stress test against host export boundaries and report stability score."""
+    cases = adversarial_generator_singleton.generate_cases(category=category, count=50)
+    report = run_stress_test(resolver_singleton, custom_cases=cases)
+    return {
+        "status": "success",
+        "total_cases": report.total_cases,
+        "passed_cases": report.passed_cases,
+        "failed_cases": report.failed_cases,
+        "stability_score": report.stability_score,
+        "false_positive_rate": report.false_positive_rate,
+        "category_scores": report.category_scores,
+        "vulnerabilities": report.vulnerabilities,
+    }
 
 
 # -----------------------------------------------------------------------------
@@ -305,6 +342,7 @@ class AnalyticsResponse(BaseModel):
     import_volume: str
     per_library: Dict[str, Dict[str, int]]
     metrics: Dict[str, float]
+    adversarial_stability: Optional[str] = None
 
 
 @router.get("/stats", response_model=StatsResponse)
@@ -343,6 +381,7 @@ async def get_analytics(
 ):
     """Retrieve resolution analytics and benchmark metrics."""
     metrics = run_eval_metrics(resolver_singleton)
+    stress_report = run_stress_test(resolver_singleton)
     top_lib = (
         max(metrics.per_library.items(), key=lambda x: x[1].get("tp", 0))[0]
         if metrics.per_library
@@ -360,5 +399,7 @@ async def get_analytics(
             "recall": round(metrics.recall, 4),
             "f1": round(metrics.f1, 4),
             "coverage": round(metrics.coverage, 4),
+            "stability_score": round(stress_report.stability_score, 2),
         },
+        adversarial_stability=f"{stress_report.stability_score:.1f}% stability ({stress_report.passed_cases}/{stress_report.total_cases} boundary probes)",
     )

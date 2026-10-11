@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_feature": "system-telemetry-and-missing-library-resolution",
+  "current_feature": "adversarial-dataset-expansion",
   "features": [
     {
       "id": "complete-test-baseline-and-ci",
@@ -60,10 +60,43 @@
     {
       "id": "adversarial-dataset-expansion",
       "title": "Adversarial dataset generation and graphics driver module resolution",
-      "status": "planned",
+      "status": "done",
       "acceptance": [
         "Expand adversarial generator with synthetic boundary imports for libSceAgcDriver and libSceVideoOut",
         "Report stress-test stability scores against host export boundaries"
+      ],
+      "implementation": [
+        "backend/services/adversarial.py",
+        "backend/services/export_db.py",
+        "backend/services/evaluator.py",
+        "backend/app/api/router.py",
+        "frontend/src/api.ts",
+        "frontend/src/components/analytics.tsx"
+      ],
+      "tests": [
+        "backend/tests/test_domain_engine.py",
+        "backend/tests/test_api_endpoints.py",
+        "frontend/tests/analytics.test.tsx"
+      ]
+    },
+    {
+      "id": "rdna2-ancillary-word-and-shader-analysis",
+      "title": "Shader recompiler ancillary register tracking and RDNA2 packed pixel extraction",
+      "status": "planned",
+      "acceptance": [
+        "Model RDNA2 packed pixel ancillary register bitfield extraction (render target and sample index) for UE4 shaders (issue #2548)",
+        "Diagnostic reporting for live register reuse and unsupported bit range extraction"
+      ],
+      "implementation": [],
+      "tests": []
+    },
+    {
+      "id": "structurizer-cfg-budget-diagnostics",
+      "title": "Structurizer CFG shared merge splitting diagnostics and loop latch analysis",
+      "status": "planned",
+      "acceptance": [
+        "Detect multi-latch loops with nested selection joins exceeding splitting budget (issue #2642)",
+        "Compute CFG complexity metrics and identify synthetic merge block recursion limits"
       ],
       "implementation": [],
       "tests": []

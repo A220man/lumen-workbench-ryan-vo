@@ -98,6 +98,12 @@ def build_export_db() -> List[ModuleExport]:
             module="libSceVideoOut",
             symbols=frozenset({
                 "sceVideoOutGetResolutionStatus",
+                "sceVideoOutOpen",
+                "sceVideoOutClose",
+                "sceVideoOutRegisterBuffers",
+                "sceVideoOutSubmitFlip",
+                "sceVideoOutSetFlipRate",
+                "sceVideoOutGetBufferAttribute",
             }),
             present=True,
         ),
@@ -112,6 +118,26 @@ def build_export_db() -> List[ModuleExport]:
             module="libSceAgcDriver",
             symbols=frozenset({
                 "sceAgcDriverGetTFRing",
+                "sceAgcDriverSubmit",
+                "sceAgcDriverRegisterResource",
+                "sceAgcDriverNotify",
+                "sceAgcDriverTrackStorageImage",
+                "sceAgcDriverRegisterShaderType",
+            }),
+            present=True,
+        ),
+        ModuleExport(
+            module="libSceSsl",
+            symbols=frozenset({
+                "sceSslGetCaList",
+                "sceSslFreeCaList",
+            }),
+            present=True,
+        ),
+        ModuleExport(
+            module="libSceNet",
+            symbols=frozenset({
+                "sceNetShowNetstat",
             }),
             present=True,
         ),

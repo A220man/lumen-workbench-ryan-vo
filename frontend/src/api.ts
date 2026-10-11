@@ -77,7 +77,33 @@ export interface AnalyticsData {
     recall: number
     f1: number
     coverage: number
+    stability_score?: number
   }
+  adversarial_stability?: string
+}
+
+export interface AdversarialSymbol {
+  name: string
+  nid: number
+  predicted_status: string
+  category?: string
+  mutation_type?: string
+}
+
+export interface AdversarialGenerationResponse {
+  generated_count: number
+  symbols: AdversarialSymbol[]
+}
+
+export interface StressTestResult {
+  status: string
+  total_cases: number
+  passed_cases: number
+  failed_cases: number
+  stability_score: number
+  false_positive_rate: number
+  category_scores: Record<string, { total: number; passed: number; failed: number; score: number }>
+  vulnerabilities: string[]
 }
 
 export const apiClient = api
@@ -123,5 +149,21 @@ export const getStats = async (): Promise<SystemStats> => {
 
 export const getAnalytics = async (): Promise<AnalyticsData> => {
   const response = await api.get("/analytics")
+  return response.data
+}
+
+export const generateAdversarialCases = async (params?: {
+  prefix?: string
+  category?: string
+  count?: number
+}): Promise<AdversarialGenerationResponse> => {
+  const response = await api.post("/adversarial/generate", null, { params })
+  return response.data
+}
+
+export const runStressTest = async (category?: string): Promise<StressTestResult> => {
+  const response = await api.post("/adversarial/stress-test", null, {
+    params: category ? { category } : undefined
+  })
   return response.data
 }

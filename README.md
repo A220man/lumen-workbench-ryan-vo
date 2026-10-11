@@ -3,7 +3,7 @@
 > Work in progress. This checkpoint may be incomplete or fail tests. See PLAN.md and STATUS.md before use.
 
 
-Current version: `1.1.0`.
+Current version: `1.2.0`.
 
 ## Overview
 
@@ -36,10 +36,11 @@ The evaluation engine compares resolver predictions against a grounded truth dat
 - Compare against baseline performance
 - Per-library breakdowns
 
-### 3. Adversarial Test Generation
-- Identify edge cases that challenge resolver robustness
-- Generate adversarial test inputs targeting weak areas
-- Validate improvements under stress conditions
+### 3. Adversarial Test Generation & Stress Testing
+- Synthesize boundary imports for graphics driver modules (`libSceAgcDriver`, `libSceVideoOut`)
+- Probe missing module boundaries (`libSceXml`, `libSceOpusDec`) and detect near-miss mutations
+- Calculate stress-test stability scores (0–100%) and verify 0% false-positive rates on negatives
+- Report boundary robustness breakdown by category (graphics, missing module, malformed symbols)
 
 ### Authentication & Authorization
 - Secure OIDC login through Keycloak (state + nonce + PKCE)
@@ -138,10 +139,17 @@ graph TB
 | `/api/v1/titles/{id}` | GET | Get specific title |
 | `/api/v1/titles/{id}` | PUT | Update title |
 | `/api/v1/titles/{id}` | DELETE | Delete title |
-| `/api/v1/auth/login` | POST | Authenticate user |
+| `/api/v1/imports/analyze` | POST | Upload and parse PS5 ELF imports with resolution report |
+| `/api/v1/evaluations` | GET | List historical evaluation benchmark records |
+| `/api/v1/evaluations/run` | POST | Run evaluation benchmark against labeled dataset |
+| `/api/v1/adversarial/generate` | POST | Synthesize boundary cases for graphics and system modules |
+| `/api/v1/adversarial/stress-test` | POST | Run boundary stress test and compute stability scores |
+| `/api/v1/stats` | GET | Retrieve live title, import volume, and evaluation stats |
+| `/api/v1/analytics` | GET | Retrieve domain performance metrics and stability scores |
+| `/api/v1/auth/login` | POST | Authenticate user with role-based JWT token |
 | `/api/v1/auth/logout` | POST | Logout user |
-| `/api/v1/auth/me` | GET | Get current user |
-| `/health` | GET | Health check |
+| `/api/v1/auth/me` | GET | Get current authenticated user profile |
+| `/health` | GET | Health check endpoint |
 
 ## Security Limitations
 
@@ -173,11 +181,14 @@ Keycloak supports upstream SAML IdPs through identity brokeling:
 ### Evaluation Commands
 
 ```bash
-# Run the import resolver evaluation
-.venv/bin/python -m backend.services.evaluator
+# Run the import resolver evaluation against labeled dataset
+PYTHONPATH=. .venv/bin/python -c "from backend.services.import_resolver import ImportResolver; from backend.services.evaluator import run_evaluation; print(run_evaluation(ImportResolver()))"
+
+# Run adversarial stress testing across graphics and system boundaries
+PYTHONPATH=. .venv/bin/python -c "from backend.services.import_resolver import ImportResolver; from backend.services.adversarial import run_stress_test; print(run_stress_test(ImportResolver()))"
 
 # Run backend tests with evaluation
-.venv/bin/python -m pytest backend/tests -v
+PYTHONPATH=backend .venv/bin/python -m pytest backend/tests -v
 
 # Run frontend tests
 cd frontend && npm test
@@ -185,14 +196,14 @@ cd frontend && npm test
 
 ### Data Provenance
 
-The labeled dataset is derived from the community-maintained import audit in issue #1578, containing real-world failures from PS5 homebrew titles including ScreenTester5, ps5-opengl, EVO-PLAYER-PS5, and ProsperoRadio.
+The labeled dataset is derived from the community-maintained import audit in issue #1578, containing real-world failures from PS5 homebrew titles including ScreenTester5, ps5-opengl, EVO-PLAYER-PS5, and ProsperoRadio, expanded with graphics driver boundaries from issues #2523, #865, and #2114.
 
-### Baseline Performance
+### Measured Performance
 
-- Initial precision: 84.2%
-- Initial recall: 87.1%
-- Initial F1-score: 85.6%
-- Coverage: 92.3%
+- Grounded dataset resolution: F1-score: 98.4%, Precision: 100%, Recall: 96.9%, Coverage: 96.9%
+- Adversarial stress test stability: 100.0% across 19 synthetic boundary probes
+- False-positive rate on adversarial negatives: 0.0%
+- Category stability: `agc_driver_boundary`: 100%, `video_out_boundary`: 100%, `missing_module_probe`: 100%, `malformed_symbol`: 100%
 
 ### Failure Cases
 

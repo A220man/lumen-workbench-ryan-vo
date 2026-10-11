@@ -1,14 +1,21 @@
+# Antigravity CLI metadata
+.antigravitycli/
+.omp/
+
 # Dependencies
+node_modules/
 /node_modules
 /.pnp
 .pnp.js
 /yarn-error.log
+.venv/
 /.venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+__pycache__/
 __pycache__
 *.py[cod]
 *$py.class
@@ -57,6 +64,7 @@ Thumbs.db
 .env
 .env.production
 .env.staging
+*.db
 *.sqlite
 *.sqlite3
 

@@ -91,6 +91,35 @@ def test_adversarial_generation_endpoint(client, operator_headers):
     assert len(data["symbols"]) == 3
 
 
+def test_adversarial_graphics_category_generation(client, operator_headers):
+    """Test generation of graphics driver boundary test cases via API."""
+    res = client.post(
+        "/api/v1/adversarial/generate?category=agc_driver_boundary&count=5",
+        headers=operator_headers,
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["generated_count"] > 0
+    symbols = [s["name"] for s in data["symbols"]]
+    assert any("sceAgcDriver" in s for s in symbols)
+
+
+def test_adversarial_stress_test_endpoint(client, operator_headers):
+    """Test adversarial stress test endpoint returns stability scores."""
+    res = client.post(
+        "/api/v1/adversarial/stress-test",
+        headers=operator_headers,
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "success"
+    assert data["total_cases"] > 0
+    assert data["stability_score"] >= 90.0
+    assert data["false_positive_rate"] == 0.0
+    assert "agc_driver_boundary" in data["category_scores"]
+    assert "video_out_boundary" in data["category_scores"]
+
+
 def test_system_stats_endpoint(client, operator_headers):
     """Test retrieval of system telemetry and runtime statistics."""
     # Create an active title to verify count
@@ -124,6 +153,8 @@ def test_system_analytics_endpoint(client, operator_headers):
     assert "precision" in analytics["metrics"]
     assert "recall" in analytics["metrics"]
     assert "libkernel" in analytics["per_library"]
+    assert "adversarial_stability" in analytics
+    assert "stability" in analytics["adversarial_stability"]
 
 
 def test_integration_workflow_http_boundary(client, operator_headers):

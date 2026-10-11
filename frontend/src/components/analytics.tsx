@@ -96,6 +96,17 @@ export const AnalyticsPanel: React.FC = () => {
             <p className="text-xs text-gray-500">{analytics.import_volume || "N/A"}</p>
           </div>
         </div>
+        {analytics.adversarial_stability && (
+          <div className="flex items-start">
+            <div className="flex-shrink-0 h-8 w-8 rounded bg-amber-100 text-amber-600 flex items-center justify-center">
+              🛡️
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-900">Adversarial Stability</p>
+              <p className="text-xs text-gray-500">{analytics.adversarial_stability}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
