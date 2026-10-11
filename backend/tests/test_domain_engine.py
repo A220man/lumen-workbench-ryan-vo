@@ -234,3 +234,38 @@ def test_stray_catalog_batch_shaders():
         assert "render_target_index" in s.extracted_fields
 
 
+def test_structurizer_issue_2642_budget_exhaustion():
+    """Verify AnyPS5 issue #2642 graph causes synthetic merge split budget exhaustion."""
+    from backend.services.structurizer import CFGStructurizerAnalyzer
+    analyzer = CFGStructurizerAnalyzer()
+    graph = [[1], [2, 4], [3, 4], [4, 5], [1, 6], [1], []]
+    report = analyzer.analyze_cfg("issue-2642-repro", graph, 28)
+    assert report.exceeded_budget is True
+    assert report.matches_issue_2642 is True
+    assert report.original_blocks == 7
+    assert report.split_budget == 28
+    assert report.current_blocks >= 28
+    assert len(report.multi_latch_loops) == 1
+    assert report.multi_latch_loops[0]["header"] == 1
+    assert sorted(report.multi_latch_loops[0]["latches"]) == [4, 5]
+    assert len(report.selection_conflicts) >= 1
+    conflict = report.selection_conflicts[0]
+    assert conflict["merge_block"] == 4
+    assert conflict["shares_latch_edge"] is True
+    assert report.recommendation is not None
+
+
+def test_structurizer_clean_baseline():
+    """Verify a clean single-latch, unshared merge CFG passes structurizer budget."""
+    from backend.services.structurizer import CFGStructurizerAnalyzer
+    analyzer = CFGStructurizerAnalyzer()
+    graph = [[1], [2, 3], [4], [4], [1, 5], []]
+    report = analyzer.analyze_cfg("clean-baseline", graph)
+    assert report.exceeded_budget is False
+    assert report.matches_issue_2642 is False
+    assert len(report.selection_conflicts) == 0
+    assert report.status == "clean"
+
+
+
+

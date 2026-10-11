@@ -137,31 +137,14 @@ async def get_auth_config() -> Dict[str, Any]:
 
 @router.post("/login", response_model=LoginResponse)
 async def login(credentials: LoginRequest):
-    """Local demo login endpoint.
-
-    Refused in production environments if LUMEN_DEMO_MODE is false or host is external.
-    """
+    """Local demo login endpoint."""
     if not settings.demo_mode:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password login is disabled. Use OIDC authorization flow.",
-        )
-    
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password login is disabled. Use OIDC authorization flow.")
     if settings.is_production:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Demo login is disabled in production.",
-        )
-
-    # In demo mode, accept demo operator credentials or any valid non-empty username with matched password
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Demo login is disabled in production.")
     if credentials.username in ("admin", "operator", "demo", "ryan") and credentials.password == "admin":
         role = "admin" if credentials.username == "admin" else "operator"
-        user_info = {
-            "id": f"demo-{credentials.username}",
-            "email": f"{credentials.username}@localhost",
-            "name": f"Demo {credentials.username.title()}",
-            "role": role,
-        }
+        user_info = {"id": f"demo-{credentials.username}", "email": f"{credentials.username}@localhost", "name": f"Demo {credentials.username.title()}", "role": role}
         token = create_token(user_info["id"], user_info["email"], user_info["name"], role)
         return LoginResponse(
             access_token=token,
@@ -170,51 +153,24 @@ async def login(credentials: LoginRequest):
             role=role,
             user=user_info,
         )
-
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid credentials",
-    )
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
 
 @router.get("/authorize", response_model=PKCEAuthUrlResponse)
 async def authorize(redirect_uri: Optional[str] = None):
     """Start OIDC authorization-code flow with PKCE."""
     if not settings.oidc_provider_url:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="OIDC provider URL is not configured",
-        )
-
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="OIDC provider URL is not configured")
     target_redirect = redirect_uri or settings.oidc_redirect_uri
-    state = generate_state()
-    nonce = generate_nonce()
-    verifier = generate_verifier()
-
-    _pending_states[state] = {
-        "nonce": nonce,
-        "verifier": verifier,
-        "redirect_uri": target_redirect,
-        "created_at": datetime.now(timezone.utc),
-    }
-
+    state, nonce, verifier = generate_state(), generate_nonce(), generate_verifier()
+    _pending_states[state] = {"nonce": nonce, "verifier": verifier, "redirect_uri": target_redirect, "created_at": datetime.now(timezone.utc)}
     try:
         discovery = await fetch_discovery(settings.oidc_provider_url)
-        auth_url = build_authorization_url(
-            discovery=discovery,
-            client_id=settings.oidc_client_id,
-            redirect_uri=target_redirect,
-            state=state,
-            nonce=nonce,
-            code_verifier=verifier,
-        )
+        auth_url = build_authorization_url(discovery, settings.oidc_client_id, target_redirect, state, nonce, verifier)
         return PKCEAuthUrlResponse(authorization_url=auth_url, state=state)
     except Exception as e:
         logger.error(f"Failed to build authorization URL: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Failed to contact OIDC provider: {str(e)}",
-        )
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Failed to contact OIDC provider: {str(e)}")
 
 
 @router.post("/callback", response_model=LoginResponse)
@@ -222,50 +178,27 @@ async def callback(cb: CallbackRequest):
     """Handle OIDC token exchange callback."""
     pending = _pending_states.pop(cb.state, None)
     if not pending:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired authorization state",
-        )
-
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired authorization state")
     try:
         discovery = await fetch_discovery(settings.oidc_provider_url)
         token_data = await exchange_code(
-            discovery=discovery,
-            client_id=settings.oidc_client_id,
-            client_secret=settings.oidc_client_secret,
-            redirect_uri=pending["redirect_uri"],
-            code=cb.code,
-            code_verifier=pending["verifier"],
+            discovery, settings.oidc_client_id, settings.oidc_client_secret, pending["redirect_uri"], cb.code, pending["verifier"]
         )
-
         id_token = token_data.get("id_token")
         if not id_token:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Provider did not return an id_token",
-            )
-
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Provider did not return an id_token")
         jwk = await fetch_jwks_jwk(discovery, settings.oidc_provider_url)
-        pem = jwk_to_pem(jwk)
         claims = await validate_id_token(
-            id_token=id_token,
-            pem=pem,
-            nonce=pending["nonce"],
-            audience=settings.oidc_audience or settings.oidc_client_id,
-            issuer=discovery.get("issuer", settings.oidc_provider_url),
+            id_token, jwk_to_pem(jwk), pending["nonce"], settings.oidc_audience or settings.oidc_client_id, discovery.get("issuer", settings.oidc_provider_url)
         )
-
         email = claims.get("email", "user@oidc.local")
         name = claims.get("name", claims.get("preferred_username", email))
         user_id = claims.get("sub", email)
         roles = claims.get("roles", [settings.oidc_default_role])
         role = roles[0] if roles else settings.oidc_default_role
-
         user_info = {"id": user_id, "email": email, "name": name, "role": role}
-        access_token = create_token(user_id, email, name, role)
-
         return LoginResponse(
-            access_token=access_token,
+            access_token=create_token(user_id, email, name, role),
             token_type="bearer",
             expires_at=datetime.now(timezone.utc) + timedelta(seconds=settings.session_ttl_seconds),
             role=role,
@@ -275,10 +208,7 @@ async def callback(cb: CallbackRequest):
         raise
     except Exception as e:
         logger.error(f"OIDC callback exchange failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Token exchange failed: {str(e)}",
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Token exchange failed: {str(e)}")
 
 
 @router.post("/logout")

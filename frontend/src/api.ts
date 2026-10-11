@@ -81,6 +81,7 @@ export interface AnalyticsData {
   }
   adversarial_stability?: string
   shader_diagnostics?: string
+  structurizer_diagnostics?: string
 }
 
 export interface AdversarialSymbol {
@@ -219,5 +220,49 @@ export const analyzeShader = async (payload: {
 
 export const getStrayShadersBatch = async (): Promise<ShaderAnalysisResponse[]> => {
   const response = await api.get('/shaders/stray-batch')
+  return response.data
+}
+
+export interface CFGDiagnosticReport {
+  name: string
+  original_blocks: number
+  current_blocks: number
+  split_budget: number
+  exceeded_budget: boolean
+  multi_latch_loops: Array<{ header: number; latches: number[]; is_multi_latch: boolean }>
+  selection_conflicts: Array<{
+    header: number
+    merge_block: number
+    external_preds: number[]
+    in_construct_preds: number[]
+    shares_latch_edge: boolean
+  }>
+  synthetic_chain_steps: string[]
+  infinite_recursion_detected: boolean
+  root_cause: string | null
+  recommendation: string | null
+  matches_issue_2642: boolean
+  status: "budget_exceeded" | "clean"
+}
+
+export interface CFGPresetItem {
+  id: string
+  name: string
+  description: string
+  adjacency: number[][]
+  expected_status: string
+}
+
+export const getStructurizerPresets = async (): Promise<CFGPresetItem[]> => {
+  const response = await api.get('/structurizer/presets')
+  return response.data
+}
+
+export const analyzeCFG = async (payload: {
+  name?: string
+  adjacency: number[][]
+  split_budget?: number
+}): Promise<CFGDiagnosticReport> => {
+  const response = await api.post('/structurizer/analyze', payload)
   return response.data
 }

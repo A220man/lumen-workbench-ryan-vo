@@ -91,11 +91,9 @@ export const ShaderAnalyzerPanel: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500">Field</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500">Bits</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500">Length</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500">Status</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500">Vulkan Mapping</th>
+                  {["Field", "Bits", "Length", "Status", "Vulkan Mapping"].map((h) => (
+                    <th key={h} className="px-4 py-2 text-left font-medium text-gray-500">{h}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">

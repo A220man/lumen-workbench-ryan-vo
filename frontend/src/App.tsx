@@ -8,6 +8,7 @@ import { AnalyticsPanel } from "./components/analytics"
 import { StatusPanel } from "./components/status"
 import { ProfilePanel } from "./components/profile"
 import { ShaderAnalyzerPanel } from "./components/shader-analyzer"
+import { StructurizerPanel } from "./components/structurizer-panel"
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
                   <Route path="/titles" element={<Dashboard />} />
                   <Route path="/evaluations" element={<EvaluationTable />} />
                   <Route path="/shaders" element={<ShaderAnalyzerPanel />} />
+                  <Route path="/structurizer" element={<StructurizerPanel />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </div>

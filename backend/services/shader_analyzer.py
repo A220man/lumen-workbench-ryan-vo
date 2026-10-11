@@ -21,14 +21,16 @@ class BitfieldDef:
 
 
 RDNA2_ANCILLARY_LAYOUT: List[BitfieldDef] = [
-    BitfieldDef("prim_type", 0, 2, False, "PrimitiveType", "Primitive type (RDNA 3.5 ISA; unmeasured on RDNA 2)"),
-    BitfieldDef("vrs_rates", 2, 4, False, "FragmentSizeEXT", "VRS shading rate bits (unmeasured on RDNA 2)"),
-    BitfieldDef("reserved_low", 6, 1, False, None, "Undocumented ancillary bit 6"),
-    BitfieldDef("eye_id", 7, 1, False, "ViewIndex", "Eye ID / multiview view index"),
-    BitfieldDef("sample_index", 8, 4, True, "SampleId", "MSAA sample index (bits 8-11)"),
-    BitfieldDef("reserved_mid", 12, 4, False, None, "Undocumented ancillary bits 12-15"),
-    BitfieldDef("render_target_index", 16, 11, True, "Layer", "Render target index (bits 16-26)"),
-    BitfieldDef("reserved_high", 27, 5, False, None, "Undocumented ancillary bits 27-31"),
+    BitfieldDef(*s) for s in [
+        ("prim_type", 0, 2, False, "PrimitiveType", "Primitive type (RDNA 3.5 ISA; unmeasured on RDNA 2)"),
+        ("vrs_rates", 2, 4, False, "FragmentSizeEXT", "VRS shading rate bits (unmeasured on RDNA 2)"),
+        ("reserved_low", 6, 1, False, None, "Undocumented ancillary bit 6"),
+        ("eye_id", 7, 1, False, "ViewIndex", "Eye ID / multiview view index"),
+        ("sample_index", 8, 4, True, "SampleId", "MSAA sample index (bits 8-11)"),
+        ("reserved_mid", 12, 4, False, None, "Undocumented ancillary bits 12-15"),
+        ("render_target_index", 16, 11, True, "Layer", "Render target index (bits 16-26)"),
+        ("reserved_high", 27, 5, False, None, "Undocumented ancillary bits 27-31"),
+    ]
 ]
 
 

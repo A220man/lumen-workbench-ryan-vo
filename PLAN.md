@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-rdna2-ancillary-word-and-shader-analysis
+structurizer-cfg-budget-diagnostics
 
 ## Roadmap
 
@@ -63,9 +63,13 @@ Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.
 
 ### structurizer-cfg-budget-diagnostics — Structurizer CFG shared merge splitting diagnostics and loop latch analysis
 
-Status: planned
+Status: done
 
 Acceptance:
 - Detect multi-latch loops with nested selection joins exceeding splitting budget (issue #2642)
 - Compute CFG complexity metrics and identify synthetic merge block recursion limits
+
+Implementation: `backend/services/structurizer.py`, `backend/app/api/router.py`, `frontend/src/api.ts`, `frontend/src/components/structurizer-panel.tsx`, `frontend/src/App.tsx`, `frontend/src/layout.tsx`
+
+Tests: `backend/tests/test_domain_engine.py`, `backend/tests/test_api_endpoints.py`, `frontend/tests/structurizer.test.tsx`
 

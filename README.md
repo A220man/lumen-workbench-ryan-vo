@@ -155,6 +155,8 @@ graph TB
 | `/api/v1/shaders/rdna2-layout` | GET | Retrieve RDNA2 packed pixel ancillary VGPR layout |
 | `/api/v1/shaders/analyze` | POST | Analyze shader instruction stream and decode ancillary words |
 | `/api/v1/shaders/stray-batch` | GET | Batch analysis for Stray (PPSA02100) UE4 shaders (issue #2548) |
+| `/api/v1/structurizer/presets` | GET | Retrieve CFG test shape presets including issue #2642 reproduction graph |
+| `/api/v1/structurizer/analyze` | POST | Analyze control-flow graph for shared merge splitting budget exhaustion |
 | `/api/v1/auth/login` | POST | Authenticate user with role-based JWT token |
 | `/api/v1/auth/logout` | POST | Logout user |
 | `/api/v1/auth/me` | GET | Get current authenticated user profile |
