@@ -1,11 +1,30 @@
 {
   "schema_version": 1,
-  "current_feature": "continue-implementation",
+  "current_feature": "advisory-ui-integration",
   "features": [
+    {
+      "id": "advisory-ui-integration",
+      "title": "Integrate LLM advisory explanations into Import Analysis UI",
+      "status": "done",
+      "acceptance": [
+        "Add Generate advisory explanation checkbox to Import Analysis form",
+        "Pass explain parameter to /imports/analyze endpoint",
+        "Display advisory explanation in results when available",
+        "All existing tests pass",
+        "Frontend build succeeds"
+      ],
+      "implementation": [
+        "frontend/src/api.ts",
+        "frontend/src/components/import-analysis.tsx"
+      ],
+      "tests": [
+        "frontend/tests/import-analysis.test.tsx"
+      ]
+    },
     {
       "id": "continue-implementation",
       "title": "Continue implementation and resolve known failures",
-      "status": "in_progress",
+      "status": "planned",
       "acceptance": [
         "Run checks, fix failures, and implement the next planned feature"
       ],

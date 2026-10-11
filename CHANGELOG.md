@@ -1,8 +1,23 @@
 # Changelog
 
-## 1.19.0 — work-in-progress checkpoint
+## 1.20.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+## 1.19.0 — Advisory UI integration for Import Analysis
+
+### Added
+- **Advisory Explanation UI**: Integrated LLM advisory explanations into Import Analysis workflow (`/imports/analyze`)
+- **Explain Checkbox**: Added "Generate advisory explanation" checkbox to Import Analysis form, conditionally passes `explain=true` to backend
+- **Advisory Display**: Results panel now renders advisory explanations when `LLM_API_KEY` is configured and explanations are requested
+
+### Changed
+- **Frontend API Client**: Extended `analyzeImports` in `frontend/src/api.ts` with optional `explain` parameter
+- **ImportAnalysis Component**: Added advisory state, checkbox, and formatted display in `frontend/src/components/import-analysis.tsx`
+
+### Fixed
+- **Test Coverage**: All 20 frontend tests and 47 backend tests pass; frontend build succeeds
+- **Preflight Validation**: Source budget compliant (149 KB), no unfinished code markers
 
 ## 1.18.0 — Version synchronization, CI/Docker optimization, and product baseline completion
 

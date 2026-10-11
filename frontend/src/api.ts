@@ -6,7 +6,7 @@ api.interceptors.response.use(r => r, e => Promise.reject(new Error(e.response?.
 export interface Title { id: number; name: string; description: string | null; status: string; created_at: string; updated_at: string; is_active: boolean }
 export interface ImportRecord { id: number; title_name: string; version: string | null; file_path: string | null; status: string; imported_at: string; analyzed_by: string | null; analysis_result: string | null }
 export interface EvaluationRecord { id: number; title_id: number; score: number; comments: string | null; created_at: string; updated_at: string }
-export interface ResolutionReport { source_name: string; needed_libraries: string[]; imports: Array<{ name: string; nid: number; library: string | null; status: string }>; resolved_count: number; unresolved_count: number; missing_module_count: number; coverage: number; score: number; blockers: string[] }
+export interface ResolutionReport { source_name: string; needed_libraries: string[]; imports: Array<{ name: string; nid: number; library: string | null; status: string }>; resolved_count: number; unresolved_count: number; missing_module_count: number; coverage: number; score: number; blockers: string[]; advisory?: string }
 export interface SystemStats { active_titles: number; total_imports: number; resolution_rate: string; evaluation_count: number }
 export interface AnalyticsData { resolution_by_library: string; performance_trend: string; import_volume: string; per_library: Record<string, { tp: number; fp: number; fn: number }>; metrics: { precision: number; recall: number; f1: number; coverage: number; stability_score?: number }; adversarial_stability?: string; shader_diagnostics?: string; structurizer_diagnostics?: string; storage_writeback_diagnostics?: string }
 export interface AdversarialSymbol { name: string; nid: number; predicted_status: string; category?: string; mutation_type?: string }
@@ -17,8 +17,10 @@ export const apiClient = api
 export const getTitle = async (id: number): Promise<Title> => (await api.get(`/titles/${id}`)).data
 export const getTitles = async (params?: any): Promise<Title[]> => (await api.get("/titles", { params })).data
 export const createTitle = async (title: Partial<Title>): Promise<Title> => (await api.post("/titles", title)).data
-export const analyzeImports = async (file: File): Promise<ResolutionReport> => {
-  const fd = new FormData(); fd.append("file", file)
+export const analyzeImports = async (file: File, explain: boolean = false): Promise<ResolutionReport> => {
+  const fd = new FormData()
+  fd.append("file", file)
+  if (explain) fd.append("explain", "true")
   return (await api.post("/imports/analyze", fd, { headers: { "Content-Type": "multipart/form-data" } })).data
 }
 export const runEvaluation = async (titleName?: string, titleId?: number): Promise<any> => (await api.post("/evaluations/run", { title_name: titleName, title_id: titleId })).data
