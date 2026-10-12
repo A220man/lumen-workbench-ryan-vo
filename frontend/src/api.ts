@@ -45,4 +45,12 @@ export interface StorageWritebackReport { status: string; texture_address: strin
 export interface StoragePresetItem { id: string; name: string; texture_address: number; texture_size: number; [k: string]: any }
 export const getStorageWritebackPresets = async (): Promise<StoragePresetItem[]> => (await api.get("/storage-writeback/presets")).data
 export const simulateStorageWriteback = async (payload?: any): Promise<StorageWritebackReport> => (await api.post("/storage-writeback/simulate", payload || {})).data
+export interface StopPRItem { number: number; url: string; commit: string; merged: boolean; description: string }
+export interface StartupStopItem { index: number; description: string; error_text: string; shader_cache_misses: number | null; prs: StopPRItem[]; verified: boolean; notes: string }
+export interface FirstLightReportResponse { title_id: string; title_name: string; version: string; stops: StartupStopItem[]; current_stop: number; passed_stops: number; failed_stops: number; status: string; regression_detected: boolean; regression_details: string[] }
+export interface FirstLightPresetItem { name: string; applied_prs: number[]; description: string }
+
+export const getFirstLightStops = async (): Promise<StartupStopItem[]> => (await api.get("/first-light/stops")).data
+export const getFirstLightPresets = async (): Promise<FirstLightPresetItem[]> => (await api.get("/first-light/presets")).data
+export const analyzeFirstLight = async (appliedPrs?: number[]): Promise<FirstLightReportResponse> => (await api.post("/first-light/analyze", { applied_prs: appliedPrs })).data
 
