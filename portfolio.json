@@ -1,7 +1,23 @@
 {
+  "schema_version": 1,
   "name": "lumen-workbench-ryan-vo",
   "owner": "A220man",
   "email": "ryandtvo@gmail.com",
+  "domain": "AI/ML developer tools for PS5 executable porting analysis with adversarial evaluation",
+  "workflows": [
+    "Import resolution: parse PS5 ELF binaries, match symbols against export database, compute coverage and blocker rankings",
+    "Adversarial evaluation: generate synthetic boundary test cases across graphics driver and missing-module surfaces, run stress tests with stability scoring",
+    "RDNA2 shader recompiler diagnostics: model packed pixel ancillary VGPR bitfields, detect register reuse patterns in UE4 shaders, evaluate PR #1179 rebuildability",
+    "Structurizer CFG budget diagnostics: analyze multi-latch loops with nested selection joins for shared merge splitting recursion exhaustion",
+    "Storage texture write-back diagnostics: simulate 64 KiB block vs 4 KiB page granularity cache conflicts for GPU SDF font atlas edge corruption"
+  ],
+  "auth": "oidc-keycloak-saml-broker",
+  "llm_providers": [
+    "openai-compatible",
+    "anthropic",
+    "gemini",
+    "ollama"
+  ],
   "summary": "Work in progress: lumen-workbench-ryan-vo",
   "status": "work-in-progress"
 }
