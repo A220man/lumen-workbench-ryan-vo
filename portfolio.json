@@ -1,24 +1,7 @@
 {
-  "schema_version": 1,
   "name": "lumen-workbench-ryan-vo",
   "owner": "A220man",
   "email": "ryandtvo@gmail.com",
-  "version": "1.21.0",
-  "status": "work-in-progress",
   "summary": "Work in progress: lumen-workbench-ryan-vo",
-  "workflows": [
-    "Analyze PS5 ELF imports and resolve against host library exports",
-    "Evaluate resolver performance against labeled community audit dataset",
-    "Generate adversarial test cases to improve robustness",
-    "Diagnose RDNA2 ancillary register reuse and shader recompiler live use failures",
-    "Diagnose control-flow graph structurizer merge splitting budget exhaustion and loop latches",
-    "Diagnose GPU storage texture write-back cache conflict and page granularity for unaligned surfaces"
-  ],
-  "auth": "oidc-keycloak-saml-broker",
-  "llm_providers": [
-    "openai-compatible",
-    "anthropic",
-    "gemini",
-    "ollama"
-  ]
+  "status": "work-in-progress"
 }
