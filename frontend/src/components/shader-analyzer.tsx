@@ -44,16 +44,12 @@ export const ShaderAnalyzerPanel: React.FC = () => {
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <h2 className="text-xl font-bold text-gray-900 mb-2">RDNA2 Shader Recompiler Diagnostics (Issue #2548)</h2>
-        <p className="text-sm text-gray-600 mb-4">
-          Models RDNA2 packed pixel ancillary register bitfield extraction (render target index and sample index) and detects register reuse patterns triggering unsupported live use errors in UE4 shaders.
-        </p>
+        <p className="text-sm text-gray-600 mb-4">Models RDNA2 packed pixel ancillary register bitfields and detects UE4 register reuse triggering unsupported live use errors.</p>
         <div className="mt-4">
           <h3 className="text-md font-semibold text-gray-800 mb-2">RDNA2 Ancillary Register (v4) Bit Layout</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50">
-                <tr>{["Field", "Bits", "Length", "Status", "Vulkan Mapping"].map(h => <th key={h} className="px-4 py-2 text-left text-gray-500">{h}</th>)}</tr>
-              </thead>
+              <thead className="bg-gray-50"><tr>{["Field","Bits","Length","Status","Vulkan Mapping"].map(h => <th key={h} className="px-4 py-2 text-left text-gray-500">{h}</th>)}</tr></thead>
               <tbody className="divide-y divide-gray-200">
                 {layout.map(item => (
                   <tr key={item.name}>
@@ -73,17 +69,9 @@ export const ShaderAnalyzerPanel: React.FC = () => {
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-4">
         <h3 className="text-md font-semibold text-gray-800">Interactive PR #1179 Bitfield Reconstruction</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-700">Sample Index (0-15)</label>
-            <input type="number" min={0} max={15} value={sampleId} onChange={e => setSampleId(Number(e.target.value))} className="mt-1 block w-full rounded border p-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700">Render Target Layer (0-2047)</label>
-            <input type="number" min={0} max={2047} value={layer} onChange={e => setLayer(Number(e.target.value))} className="mt-1 block w-full rounded border p-2 text-sm" />
-          </div>
-          <div className="flex items-end">
-            <button onClick={handleRebuildAndDecode} className="w-full bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 font-medium">Reconstruct & Decode</button>
-          </div>
+          <div><label className="block text-xs font-medium text-gray-700">Sample Index (0-15)</label><input type="number" min={0} max={15} value={sampleId} onChange={e => setSampleId(Number(e.target.value))} className="mt-1 block w-full rounded border p-2 text-sm" /></div>
+          <div><label className="block text-xs font-medium text-gray-700">Render Target Layer (0-2047)</label><input type="number" min={0} max={2047} value={layer} onChange={e => setLayer(Number(e.target.value))} className="mt-1 block w-full rounded border p-2 text-sm" /></div>
+          <div className="flex items-end"><button onClick={handleRebuildAndDecode} className="w-full bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 font-medium">Reconstruct & Decode</button></div>
         </div>
         <div className="p-3 bg-gray-50 rounded border text-sm font-mono flex items-center justify-between">
           <span>Reconstructed Ancillary Word:</span>

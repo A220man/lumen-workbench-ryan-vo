@@ -64,7 +64,7 @@ describe("StorageWritebackPanel Component", () => {
     render(<StorageWritebackPanel />)
 
     await waitFor(() => {
-      expect(screen.getByText("Storage Texture Write-Back Diagnostics (Issue #865)")).toBeInTheDocument()
+      expect(screen.getByText("Storage Write-Back Diagnostics (Issue #865)")).toBeInTheDocument()
     })
 
     expect(screen.getByText("Silksong SDF Font Atlas (Issue #865)")).toBeInTheDocument()

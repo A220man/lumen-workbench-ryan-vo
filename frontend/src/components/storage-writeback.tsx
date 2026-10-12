@@ -24,8 +24,7 @@ export const StorageWritebackPanel: React.FC = () => {
   }, [checkRole])
 
   const handleSelectPreset = async (preset: StoragePresetItem) => {
-    try {
-      setSelectedPresetId(preset.id); setLoading(true)
+    try { setSelectedPresetId(preset.id); setLoading(true)
       const res = await simulateStorageWriteback({ texture_address: preset.texture_address, texture_size: preset.texture_size })
       setReport(res); setError(null)
     } catch (err) { setError((err as Error).message) }
@@ -41,14 +40,12 @@ export const StorageWritebackPanel: React.FC = () => {
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-xl font-bold text-gray-900">Storage Texture Write-Back Diagnostics (Issue #865)</h2>
-          {report && (
-            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${isConflict ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}>
-              {isConflict ? "Conflict Detected (Boxes in Menu Text)" : "Clean Write-Back (Zero Corruption)"}
-            </span>
-          )}
+          <h2 className="text-xl font-bold text-gray-900">Storage Write-Back Diagnostics (Issue #865)</h2>
+          {report && <span className={`px-3 py-1 rounded-full text-xs font-semibold ${isConflict ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}>
+            {isConflict ? "Conflict Detected (Boxes in Menu Text)" : "Clean Write-Back (Zero Corruption)"}
+          </span>}
         </div>
-        <p className="text-sm text-gray-600 mb-4">Models 64 KiB block vs 4 KiB page granularity write-back conflict detection for unaligned GPU storage textures in Hollow Knight: Silksong (PPSA12544).</p>
+        <p className="text-sm text-gray-600 mb-4">Models 64 KiB block vs 4 KiB page write-back conflict detection for unaligned GPU storage textures in Silksong (PPSA12544).</p>
         <div className="flex space-x-3 mb-6">
           {presets.map(p => (
             <button key={p.id} onClick={() => handleSelectPreset(p)} className={`px-3 py-1.5 rounded text-xs font-medium border ${selectedPresetId === p.id ? "bg-blue-50 border-blue-500 text-blue-700" : "bg-gray-50 text-gray-600"}`}>
@@ -59,8 +56,8 @@ export const StorageWritebackPanel: React.FC = () => {
         {report && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-              {[["Texture Address", report.texture_address, true], ["Alignment Offset", report.alignment_offset, true], ["Blocks Spanned", report.total_blocks_spanned, false], ["Edge Blocks", report.edge_blocks_count, false]].map(([lbl, val, mono]) => (
-                <div key={lbl as string} className="p-3 bg-gray-50 rounded border"><p className="text-gray-500">{lbl}</p><p className={`font-bold ${mono ? "font-mono" : ""}`}>{val}</p></div>
+              {[["Texture Address", report.texture_address, true], ["Alignment Offset", report.alignment_offset, true], ["Blocks Spanned", report.total_blocks_spanned, false], ["Edge Blocks", report.edge_blocks_count, false]].map(([lbl, val, mono], idx) => (
+                <div key={idx} className="p-3 bg-gray-50 rounded border"><p className="text-gray-500">{lbl}</p><p className={`font-bold ${mono ? "font-mono" : ""}`}>{val}</p></div>
               ))}
             </div>
             {report.warning_logged && <div className="p-3 bg-amber-50 border border-amber-200 rounded text-xs font-mono text-amber-900">{report.warning_logged}</div>}
