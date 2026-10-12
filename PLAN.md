@@ -10,8 +10,18 @@ continue-implementation
 
 ### continue-implementation — Continue implementation and resolve known failures
 
-Status: in_progress
+Status: done
 
 Acceptance:
-- Run checks, fix failures, and implement the next planned feature
+- All backend tests pass (47/47)
+- All frontend tests pass (20/20)
+- Frontend build succeeds
+- Preflight validation passes (source budget, no unfinished code, no token-shaped files)
+- Portfolio.json updated to contract specification with domain, workflows, auth, llm_providers
+- Title model extended with PS5-specific fields (ppsa_id, version)
+- TitleService integrated with new endpoints: list, get by ID, get by PPSSA ID, create, update, delete, history
+
+Implementation: `backend/models/title.py`, `backend/schemas/title.py`, `backend/services/title_registry.py`, `backend/app/api/router.py`, `portfolio.json`
+
+Tests: `backend/tests/test_api_endpoints.py::test_titles_crud_lifecycle`, `backend/tests/test_api_endpoints.py::test_adversarial_generation_endpoint`, `backend/tests/test_api_endpoints.py::test_system_analytics_endpoint`, `backend/tests/test_api_endpoints.py::test_integration_workflow_http_boundary`, `backend/tests/test_api_endpoints.py::test_storage_writeback_simulate_endpoint`
 

@@ -14,12 +14,16 @@ class TitleCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = Field(None, max_length=1024)
     status: TitleStatus = TitleStatus.DRAFT
+    ppsa_id: Optional[str] = Field(None, min_length=1, max_length=20, pattern=r"^PPSA\d+$")
+    version: Optional[str] = Field(None, max_length=50)
 
 class TitleUpdate(BaseModel):
     """Schema for updating a title."""
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = Field(None, max_length=1024)
     status: Optional[TitleStatus] = None
+    ppsa_id: Optional[str] = Field(None, min_length=1, max_length=20, pattern=r"^PPSA\d+$")
+    version: Optional[str] = Field(None, max_length=50)
 
 class TitleResponse(BaseModel):
     """Schema for title responses."""
@@ -30,5 +34,7 @@ class TitleResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     is_active: bool
+    ppsa_id: Optional[str] = None
+    version: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

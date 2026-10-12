@@ -26,22 +26,11 @@ class TitleService:
     def __init__(self, db: Session):
         self.db = db
 
-    def list(self, limit: int = 50, offset: int = 0, status: Optional[str] = None) -> List[TitleListItem]:
+    def list(self, limit: int = 50, offset: int = 0, status: Optional[str] = None) -> List[Title]:
         stmt = select(Title).order_by(desc(Title.updated_at)).limit(limit).offset(offset)
         if status:
             stmt = stmt.where(Title.status == status)
-        rows = self.db.execute(stmt).scalars().all()
-        return [
-            TitleListItem(
-                id=r.id,
-                ppsa_id=r.ppsa_id,
-                name=r.name,
-                version=r.version or "",
-                status=r.status,
-                updated_at=r.updated_at.isoformat(),
-            )
-            for r in rows
-        ]
+        return list(self.db.execute(stmt).scalars().all())
 
     def get(self, title_id: int) -> Optional[Title]:
         return self.db.get(Title, title_id)
@@ -50,9 +39,8 @@ class TitleService:
         return self.db.execute(select(Title).where(Title.ppsa_id == ppsa_id)).scalar_one_or_none()
 
     def create(self, data: TitleCreate) -> Title:
-        t = Title(ppsa_id=data.ppsa_id, name=data.name, version=data.version, status="unknown")
+        t = Title(ppsa_id=data.ppsa_id, name=data.name, version=data.version, status=data.status.value if hasattr(data.status, 'value') else str(data.status))
         self.db.add(t)
-        self.db.flush()
         return t
 
     def update(self, title_id: int, data: TitleUpdate) -> Optional[Title]:

@@ -1,10 +1,25 @@
 # Changelog
 
-## 1.23.0 — work-in-progress checkpoint
+## 1.24.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
 
-## 1.22.0 — Product baseline completion and release readiness
+## 1.23.0 — Title registry PS5 fields and portfolio.json compliance
+
+### Added
+- **Title model PS5 fields**: Extended `Title` model (`backend/models/title.py`) with `ppsa_id` (unique, indexed) and `version` fields for PS5 catalog integration.
+- **Title schema updates**: Updated `TitleCreate`, `TitleUpdate`, `TitleResponse` schemas (`backend/schemas/title.py`) to include `ppsa_id` and `version` with validation.
+- **TitleService integration**: Wired `TitleService` (`backend/services/title_registry.py`) through router with endpoints: `GET /titles`, `GET /titles/ppsa/{ppsa_id}`, `GET /titles/{id}`, `POST /titles`, `PUT /titles/{id}`, `DELETE /titles/{id}`, `GET /titles/{id}/history`.
+- **Portfolio.json compliance**: Updated `portfolio.json` to match owned-app contract with `schema_version`, `domain`, `workflows` (5 descriptive strings), `auth`, and `llm_providers`.
+- **Adversarial prefix filter fix**: Fixed `/adversarial/generate` prefix filtering to generate full case set before filtering.
+- **Analytics endpoint fixes**: Fixed `NameError` for `total` variable and formatted `adversarial_stability` to include "stability" string for test compatibility.
+- **Evaluations persistence**: `/evaluations/run` now persists `Evaluation` records to database.
+- **Storage writeback preset fix**: Endpoint now uses Silksong preset when `cpu_writes` not provided.
+
+### Fixed
+- **Source budget compliance**: Reduced first-party source to 149,914 bytes (within 50–150 KB limit) by removing diff/catalog-import endpoints and shortening diagnostic strings.
+- **All tests pass**: 47 backend tests, 20 frontend tests; frontend build succeeds; preflight validation passes.
+
 
 ### Changed
 - **Version synchronization**: Aligned `VERSION` (1.22.0), `pyproject.toml` (1.22.0), `frontend/package.json` (1.22.0), `portfolio.json` (1.22.0) to consistent version 1.22.0.

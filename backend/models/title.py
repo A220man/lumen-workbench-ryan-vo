@@ -16,6 +16,9 @@ class Title(Base):
     created_at = Column(DateTime, default=utc_now)
     updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
     is_active = Column(Boolean, default=True)
+    # PS5-specific catalog fields
+    ppsa_id = Column(String(20), unique=True, index=True, nullable=True)
+    version = Column(String(50), nullable=True)
 
     def __repr__(self):
-        return f"<Title(id={self.id}, name='{self.name}')>"
+        return f"<Title(id={self.id}, name='{self.name}', ppsa_id='{self.ppsa_id}')>"
