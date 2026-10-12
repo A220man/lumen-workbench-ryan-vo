@@ -49,6 +49,21 @@ class TitleService:
             return None
         if data.name is not None:
             t.name = data.name
+        if data.description is not None:
+            t.description = data.description
+        if data.version is not None:
+            t.version = data.version
+        if data.status is not None:
+            t.status = data.status.value if hasattr(data.status, 'value') else str(data.status)
+        if data.ppsa_id is not None:
+            t.ppsa_id = data.ppsa_id
+        self.db.flush()
+        return t
+        t = self.get(title_id)
+        if not t:
+            return None
+        if data.name is not None:
+            t.name = data.name
         if data.version is not None:
             t.version = data.version
         if data.status is not None:

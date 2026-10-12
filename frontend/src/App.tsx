@@ -9,8 +9,9 @@ import { StatusPanel } from "./components/status"
 import { ProfilePanel } from "./components/profile"
 import { ShaderAnalyzerPanel } from "./components/shader-analyzer"
 import { StructurizerPanel } from "./components/structurizer-panel"
-import { StorageWritebackPanel } from "./components/storage-writeback"
+import { FirstLightDiagnostic } from "./components/first-light-diagnostic"
 import { ImportAnalysis } from "./components/import-analysis"
+import { StorageWritebackPanel } from "./components/storage-writeback"
 
 export default function App() {
   return (
@@ -26,7 +27,7 @@ export default function App() {
                   <Route path="/evaluations" element={<EvaluationTable />} />
                   <Route path="/imports/analyze" element={<ImportAnalysis />} />
                   <Route path="/shaders" element={<ShaderAnalyzerPanel />} />
-                  <Route path="/structurizer" element={<StructurizerPanel />} />
+                  <Route path="/first-light" element={<FirstLightDiagnostic />} />
                   <Route path="/storage-writeback" element={<StorageWritebackPanel />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>

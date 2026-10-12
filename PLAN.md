@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-export-import-report
+first-light-diagnostic
 
 ## Roadmap
 
@@ -40,4 +40,21 @@ Acceptance:
 Implementation: `frontend/src/components/import-analysis.tsx`
 
 Tests: `frontend/tests/import-analysis.test.tsx`
+
+### first-light-diagnostic — Add 007 First Light startup sequence diagnostic (issue #2523)
+
+Status: in_progress
+
+Acceptance:
+- Add FirstLightDiagnostic service modeling the 13-stop startup sequence from issue #2523
+- Add API endpoints: /first-light/stops, /first-light/analyze, /first-light/presets
+- Add frontend FirstLightDiagnostic component with stop progression visualization
+- Include PR references and verification status for each stop
+- All backend tests pass
+- All frontend tests pass
+- Frontend build succeeds
+
+Implementation: `backend/services/first_light_diagnostic.py`, `backend/app/api/router.py`, `frontend/src/components/first-light-diagnostic.tsx`, `frontend/src/api.ts`
+
+Tests: `backend/tests/test_domain_engine.py::test_first_light_stop_sequence`, `backend/tests/test_domain_engine.py::test_first_light_pr_mapping`, `backend/tests/test_api_endpoints.py::test_first_light_stops_endpoint`, `backend/tests/test_api_endpoints.py::test_first_light_analyze_endpoint`, `frontend/tests/first-light-diagnostic.test.tsx`
 
