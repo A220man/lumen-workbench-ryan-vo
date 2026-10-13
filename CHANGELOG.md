@@ -1,8 +1,29 @@
 # Changelog
 
-## 1.28.0 — work-in-progress checkpoint
+## 1.29.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+## 1.28.0 — Keycloak integration and documentation baseline
+
+### Added
+- **Keycloak OIDC Provider**: Added Keycloak service to `compose.yaml` with development realm import (`keycloak/realm.json`). Includes pre-configured client `lumen-workbench`, roles (`viewer`, `operator`, `admin`), and test users.
+- **Documentation Suite**: Created `docs/` directory with three comprehensive guides:
+  - `docs/api.md`: Complete REST API reference with request/response examples for all 25+ endpoints
+  - `docs/architecture.md`: System architecture with Mermaid diagrams, component details, data flows, security boundaries, deployment topology
+  - `docs/deployment.md`: Production deployment guide covering TLS reverse proxy (nginx/Traefik), Keycloak/SAML broker setup, backup/restore procedures, monitoring, troubleshooting
+- **README Enhancements**: Added Documentation section with links, TLS reverse proxy requirements, backup/restore commands, and SAML IdP enrollment steps.
+
+### Changed
+- **Compose Stack**: Extended `compose.yaml` with Keycloak service, persistent volumes (`keycloak-data`), healthchecks, and service dependencies.
+- **Feature Plan**: Marked `docs-keycloak-integration` as done with full acceptance criteria, implementation paths, and test references.
+- **Plan & Status**: Updated `PLAN.md` with completed feature details and future roadmap items.
+
+### Verified
+- All 53 backend tests pass (pytest)
+- All 25 frontend tests pass (vitest)
+- Frontend TypeScript build succeeds (tsc + vite build)
+- Preflight validation: source budget 149,901 bytes (within 50–150 KB), no unfinished code, no token-shaped files
 
 ## 1.27.0 — work-in-progress checkpoint
 
