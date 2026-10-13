@@ -262,3 +262,27 @@ cd frontend && npm run build
 
 **ASI Research Interest:**
 This project contributes to AI/ML research toward artificial superintelligence, focusing on evaluation methodologies, adversarial learning, and deterministic analysis of binary processing tools.
+
+## Documentation
+
+- [API Reference](docs/api.md) — Complete endpoint reference with request/response examples
+- [Architecture](docs/architecture.md) — System design, data flows, and component details
+- [Deployment Guide](docs/deployment.md) — Production deployment, TLS reverse proxy, Keycloak/SAML setup, backup/restore, monitoring
+
+### TLS Reverse Proxy (Production Required)
+The application must run behind a TLS-terminating reverse proxy (nginx, Traefik, Caddy). See [deployment.md](docs/deployment.md#tls-reverse-proxy-production-required) for configuration examples. Critical headers: `X-Forwarded-Proto: https`, `X-Forwarded-For`, `Host`.
+
+### Backup & Restore
+- **SQLite**: `docker exec lumen-backend sqlite3 /data/lumen.db ".backup /data/lumen-backup-$(date +%F).db"`
+- **PostgreSQL**: `docker exec lumen-db pg_dump -U lumen lumen > backup.sql`
+- **Keycloak**: Export realm via admin console or `kc.sh export`
+See [deployment.md](docs/deployment.md#backup--restore) for full procedures.
+
+### IdP Enrollment (SAML via Keycloak)
+Keycloak brokers upstream SAML IdPs (Azure AD, Okta, Auth0):
+1. Keycloak Admin Console → Identity Providers → Add SAML v2.0
+2. Import IdP metadata or configure entity ID, SSO URL, certificates
+3. Map SAML attributes (email, name, groups) to user attributes
+4. Create role mappers to assign realm roles (`viewer`, `operator`, `admin`) from SAML assertions
+5. Test with IdP-initiated login
+See [deployment.md](docs/deployment.md#saml-brokering) for details.

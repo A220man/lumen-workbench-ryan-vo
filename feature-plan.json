@@ -1,16 +1,43 @@
 {
   "schema_version": 1,
-  "current_feature": "continue-implementation",
+  "current_feature": "docs-keycloak-integration",
   "features": [
     {
       "id": "continue-implementation",
       "title": "Continue implementation and resolve known failures",
-      "status": "in_progress",
+      "status": "done",
       "acceptance": [
         "Run checks, fix failures, and implement the next planned feature"
       ],
       "implementation": [],
       "tests": []
+    },
+    {
+      "id": "docs-keycloak-integration",
+      "title": "Add Keycloak to compose.yaml and create documentation",
+      "status": "done",
+      "acceptance": [
+        "Keycloak service added to compose.yaml with realm import",
+        "docs/api.md with complete endpoint reference",
+        "docs/architecture.md with system design and data flows",
+        "docs/deployment.md with TLS proxy, backup/restore, SAML setup",
+        "README updated with documentation links and key deployment info",
+        "All tests pass and preflight check passes"
+      ],
+      "implementation": [
+        "compose.yaml",
+        "keycloak/realm.json",
+        "docs/api.md",
+        "docs/architecture.md",
+        "docs/deployment.md",
+        "README.md"
+      ],
+      "tests": [
+        "backend/tests/test_api_endpoints.py (53 tests)",
+        "backend/tests/test_auth.py (7 tests)",
+        "backend/tests/test_domain_engine.py (33 tests)",
+        "frontend/tests/ (25 tests across 10 files)"
+      ]
     }
   ]
 }
