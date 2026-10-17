@@ -1,7 +1,7 @@
 import pytest
 from backend.core.elf_parser import ELFImport, ELFError, parse_elf_imports
 from backend.core.nid import nid_of
-from backend.services.import_resolver import ImportResolver
+from backend.services.import_resolver import ResolutionReport, ImportResolver, ResolvedImport
 from backend.services.export_db import build_export_db
 from backend.services.evaluator import run_evaluation, labeled_dataset
 from backend.services.adversarial import AdversarialGenerator, run_stress_test
@@ -377,3 +377,22 @@ def test_first_light_presets():
     all_merged = next(p for p in presets if p["name"] == "all merged PRs")
     assert 2830 in all_merged["applied_prs"]
     assert 1893 in all_merged["applied_prs"]
+
+@pytest.mark.asyncio
+async def test_generate_advisory_disabled_without_key():
+    """Verify generate_advisory returns disabled notice when LLM_API_KEY is absent."""
+    from backend.services.advisory import generate_advisory
+
+    rep = ResolutionReport(
+        source_name="test.elf",
+        needed_libraries=["libkernel"],
+        imports=[],
+        resolved_count=1,
+        unresolved_count=0,
+        missing_module_count=0,
+        coverage=1.0,
+        score=100,
+        blockers=[],
+    )
+    result = await generate_advisory(rep)
+    assert "LLM advisory disabled" in result

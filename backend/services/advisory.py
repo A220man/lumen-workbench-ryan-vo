@@ -13,31 +13,17 @@ from ..core.redaction import redact
 from .provider import LLMProvider, LLMError
 
 
+_DEFAULT_BASE_URLS = {"anthropic": "https://api.anthropic.com", "gemini": "https://generativelanguage.googleapis.com"}
+_DEFAULT_MODELS = {"anthropic": "claude-3-5-sonnet-20241022", "gemini": "gemini-1.5-flash"}
+
+
 def build_advisor(system: Optional[str] = None) -> Optional[LLMProvider]:
     """Build an LLM provider from operator settings, or None if disabled."""
     if not settings.llm_api_key:
         return None
     provider = settings.llm_provider
-    model = settings.llm_model
-    base_url = settings.llm_base_url
-    if not base_url:
-        if provider == "openai-compatible":
-            base_url = "https://api.openai.com"
-        elif provider == "anthropic":
-            base_url = "https://api.anthropic.com"
-        elif provider == "gemini":
-            base_url = "https://generativelanguage.googleapis.com"
-        else:
-            base_url = "https://api.openai.com"
-    if not model:
-        if provider == "openai-compatible":
-            model = "gpt-4o-mini"
-        elif provider == "anthropic":
-            model = "claude-3-5-sonnet-20241022"
-        elif provider == "gemini":
-            model = "gemini-1.5-flash"
-        else:
-            model = "gpt-4o-mini"
+    base_url = settings.llm_base_url or _DEFAULT_BASE_URLS.get(provider, "https://api.openai.com")
+    model = settings.llm_model or _DEFAULT_MODELS.get(provider, "gpt-4o-mini")
     return LLMProvider(provider, model, base_url, settings.llm_api_key, timeout=int(settings.llm_timeout_seconds))
 
 
@@ -69,3 +55,13 @@ async def explain_imports(report, advisor: Optional[LLMProvider]) -> str:
     except Exception as e:
         return f"LLM provider error: {redact(str(e))}"
     return f"[ADVISORY] {text.strip()}"
+
+
+async def generate_advisory(report) -> str:
+    """Build an advisor from operator settings and explain an import report.
+
+    Returns a grounded advisory explanation, or a disabled notice when no
+    LLM_API_KEY is configured. Provider errors are surfaced (never fabricated).
+    """
+    advisor = build_advisor()
+    return await explain_imports(report, advisor)

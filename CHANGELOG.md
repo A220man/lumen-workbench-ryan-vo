@@ -1,8 +1,15 @@
 # Changelog
 
-## 1.29.0 — work-in-progress checkpoint
+## 1.30.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+## 1.29.0 — advisory `generate_advisory` fix and version sync
+
+### Fixed
+- **Broken LLM advisory path**: `POST /imports/analyze?explain=true` imported a `generate_advisory` function that did not exist in `services/advisory.py`, causing an `ImportError` at runtime. Added the `generate_advisory` async wrapper (builds advisor from operator settings, calls `explain_imports`) and fixed the router to `await` it. When `LLM_API_KEY` is absent, the endpoint returns a clear "LLM advisory disabled" notice grounded in actual configuration rather than crashing.
+- **Version desynchronization**: `pyproject.toml` and `frontend/package.json`/`package-lock.json` were pinned to 1.26.0 while `VERSION` was 1.29.0. Synchronized all metadata to 1.29.0.
+- **README auth & API reference**: README described "HTTP-only cookies with CSRF protection" but the implementation uses bearer JWT tokens kept in memory (SPA PKCE architecture). Corrected the description and added the missing `/auth/config`, `/auth/authorize`, and `/auth/callback` endpoints to the API reference table.
 
 ## 1.28.0 — Keycloak integration and documentation baseline
 

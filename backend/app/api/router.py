@@ -200,8 +200,7 @@ async def analyze_imports(
     adv = None
     if explain:
         from ...services.advisory import generate_advisory
-
-        adv = generate_advisory(rep)
+        adv = await generate_advisory(rep)
     return ResolutionReportResponse(
         source_name=rep.source_name,
         needed_libraries=rep.needed_libraries,
