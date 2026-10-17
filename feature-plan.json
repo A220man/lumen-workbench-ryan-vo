@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_feature": "docs-keycloak-integration",
+  "current_feature": "fix-advisory-path",
   "features": [
     {
       "id": "continue-implementation",
@@ -37,6 +37,31 @@
         "backend/tests/test_auth.py (7 tests)",
         "backend/tests/test_domain_engine.py (33 tests)",
         "frontend/tests/ (25 tests across 10 files)"
+      ]
+    },
+    {
+      "id": "fix-advisory-path",
+      "title": "Fix broken LLM advisory path and version/desync documentation",
+      "status": "done",
+      "acceptance": [
+        "POST /imports/analyze?explain=true does not crash with ImportError",
+        "generate_advisory exists in advisory.py and is awaited in router",
+        "Advisory field returned when LLM_API_KEY absent with disabled notice",
+        "Version metadata synchronized: VERSION, pyproject.toml, package.json, package-lock.json all 1.29.0",
+        "README auth description matches bearer-token architecture, API table includes OIDC endpoints",
+        "All tests pass and preflight check passes"
+      ],
+      "implementation": [
+        "backend/services/advisory.py",
+        "backend/app/api/router.py",
+        "pyproject.toml",
+        "frontend/package.json",
+        "frontend/package-lock.json",
+        "README.md"
+      ],
+      "tests": [
+        "backend/tests/test_api_endpoints.py::test_import_analysis_with_explain_disabled",
+        "backend/tests/test_domain_engine.py::test_generate_advisory_disabled_without_key"
       ]
     }
   ]

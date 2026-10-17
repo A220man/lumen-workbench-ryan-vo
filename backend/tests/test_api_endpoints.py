@@ -76,6 +76,16 @@ def test_import_analysis_endpoint(client, operator_headers):
     assert "score" in report
     assert "blockers" in report
 
+def test_import_analysis_with_explain_disabled(client, operator_headers):
+    """Test ELF analysis with explain=true returns advisory field when LLM_API_KEY is absent."""
+    dummy_elf = b"\x7fELF\x02\x01\x01\x00" + b"\x00" * 128
+    files = {"file": ("test_binary.elf", io.BytesIO(dummy_elf), "application/octet-stream")}
+    params = {"explain": "true"}
+    res = client.post("/api/v1/imports/analyze", files=files, params=params, headers=operator_headers)
+    assert res.status_code == 200
+    report = res.json()
+    assert "advisory" in report
+    assert "LLM advisory disabled" in report["advisory"]
 
 def test_evaluations_run_endpoint(client, operator_headers):
     """Test benchmark evaluation runner endpoint."""

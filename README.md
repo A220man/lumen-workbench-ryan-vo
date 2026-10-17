@@ -61,7 +61,7 @@ The evaluation engine compares resolver predictions against a grounded truth dat
 ### Authentication & Authorization
 - Secure OIDC login through Keycloak (state + nonce + PKCE)
 - Role-based access control (viewer, operator, admin)
-- HTTP-only cookies with CSRF protection
+- Bearer JWT tokens kept in memory (SPA PKCE architecture)
 - Local demo mode for development
 
 ### Persistence & Analytics
@@ -167,10 +167,12 @@ graph TB
 | `/api/v1/shaders/stray-batch` | GET | Batch analysis for Stray (PPSA02100) UE4 shaders (issue #2548) |
 | `/api/v1/structurizer/presets` | GET | Retrieve CFG test shape presets including issue #2642 reproduction graph |
 | `/api/v1/structurizer/analyze` | POST | Analyze control-flow graph for shared merge splitting budget exhaustion |
-| `/api/v1/auth/login` | POST | Authenticate user with role-based JWT token |
+| `/api/v1/auth/config` | GET | Get authentication configuration (public) |
+| `/api/v1/auth/login` | POST | Authenticate in demo mode, issue bearer JWT |
+| `/api/v1/auth/authorize` | GET | Initiate OIDC PKCE authorization-code flow |
+| `/api/v1/auth/callback` | POST | Complete OIDC PKCE callback, exchange code for token |
 | `/api/v1/auth/logout` | POST | Logout user |
 | `/api/v1/auth/me` | GET | Get current authenticated user profile |
-| `/health` | GET | Health check endpoint |
 
 ## Security Limitations
 
