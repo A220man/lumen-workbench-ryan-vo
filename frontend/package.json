@@ -1,1 +1,57 @@
-{"name":"lumen-workbench-frontend","version":"1.29.0","private":true,"description":"Lumen Workbench - AI/ML developer tools for PS5 executable porting analysis","scripts":{"dev":"vite","build":"tsc && vite build","test":"vitest run","typecheck":"tsc --noEmit","lint":"eslint src --ext .ts,.tsx","format":"prettier --write src"},"dependencies":{"@headlessui/react":"^1.7.17","@heroicons/react":"^2.1.1","axios":"^1.6.7","date-fns":"^3.3.1","react":"^18.3.0","react-dom":"^18.3.0","react-router-dom":"^6.22.3"},"devDependencies":{"@testing-library/jest-dom":"^6.9.1","@testing-library/react":"^14.1.2","@testing-library/user-event":"^14.6.7","@types/node":"^20.11.24","@types/react":"^18.2.57","@types/react-dom":"^18.2.18","@typescript-eslint/eslint-plugin":"^6.21.0","@typescript-eslint/parser":"^6.21.0","@vitejs/plugin-react":"^4.3.1","autoprefixer":"^3.4.7","eslint":"^8.179.0","eslint-config-prettier":"^9.1.0","eslint-plugin-react":"^7.37.6","eslint-plugin-react-hooks":"^4.6.1","eslint-plugin-react-refresh":"^2.5.1","eslint-plugin-unused-imports":"^4.0.6","jsdom":"^26.4.0","postcss":"^3.4.7","tailwindcss":"^3.4.7","terser":"^5.39.7","typescript":"^5.7.4","vitest":"^3.1.9","vite":"^5.4.21"},"browserslist":["defaults","not dead","not ie 11"]}
+{
+  "name": "lumen-workbench-frontend",
+  "version": "1.30.0",
+  "private": true,
+  "description": "Lumen Workbench - AI/ML developer tools for PS5 executable porting analysis",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write src"
+  },
+  "dependencies": {
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.1.1",
+    "axios": "^1.6.7",
+    "date-fns": "^3.3.1",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-router-dom": "^6.22.3"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^20.11.24",
+    "@types/react": "^18.2.57",
+    "@types/react-dom": "^18.2.18",
+    "@typescript-eslint/eslint-plugin": "^8.72.0",
+    "@typescript-eslint/parser": "^8.72.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^4.6.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "eslint-plugin-unused-imports": "^4.0.6",
+    "jsdom": "^27.0.0",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.7",
+    "terser": "^5.39.7",
+    "typescript": "^5.4.5",
+    "vitest": "^3.1.9",
+    "vite": "^5.4.21"
+  },
+  "browserslist": [
+    "defaults",
+    "not dead",
+    "not ie 11"
+  ],
+  "author": {
+    "name": "Ryan Vo",
+    "email": "ryandtvo@gmail.com",
+    "url": "https://github.com/A220man"
+  }
+}

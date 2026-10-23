@@ -1,1 +1,99 @@
-{"schema_version":1,"current_feature":"","features":[{"id":"continue-implementation","title":"Continue implementation and resolve known failures","status":"done","acceptance":["All backend tests pass (47/47)","All frontend tests pass (20/20)","Frontend build succeeds","Preflight validation passes (source budget, no unfinished code, no token-shaped files)","Portfolio.json updated to contract specification with domain, workflows, auth, llm_providers","Title model extended with PS5-specific fields (ppsa_id, version)","TitleService integrated with new endpoints: list, get by ID, get by PPSSA ID, create, update, delete, history"],"implementation":["backend/models/title.py","backend/schemas/title.py","backend/services/title_registry.py","backend/app/api/router.py","portfolio.json"],"tests":["backend/tests/test_api_endpoints.py::test_titles_crud_lifecycle","backend/tests/test_api_endpoints.py::test_adversarial_generation_endpoint","backend/tests/test_api_endpoints.py::test_system_analytics_endpoint","backend/tests/test_api_endpoints.py::test_integration_workflow_http_boundary","backend/tests/test_api_endpoints.py::test_storage_writeback_simulate_endpoint"]},{"id":"export-import-report","title":"Add CSV/JSON export for import analysis reports","status":"done","acceptance":["Add Export Report button to Import Analysis results panel","Support CSV and JSON export formats","Exported file includes all import details, coverage, blockers, and advisory explanation","Export works without LLM_API_KEY configured","All existing tests pass","Frontend build succeeds"],"implementation":["frontend/src/components/import-analysis.tsx"],"tests":["frontend/tests/import-analysis.test.tsx"]},{"id":"first-light-diagnostic","title":"Add 007 First Light startup sequence diagnostic (issue #2523)","status":"done","acceptance":["Add FirstLightDiagnostic service modeling the 13-stop startup sequence from issue #2523","Add API endpoints: /first-light/stops, /first-light/analyze, /first-light/presets","Add frontend FirstLightDiagnostic component with stop progression visualization","Include PR references and verification status for each stop","All backend tests pass","All frontend tests pass","Frontend build succeeds"],"implementation":["backend/services/first_light_diagnostic.py","backend/app/api/router.py","frontend/src/components/first-light-diagnostic.tsx","frontend/src/api.ts"],"tests":["backend/tests/test_domain_engine.py::test_first_light_stop_sequence","backend/tests/test_domain_engine.py::test_first_light_pr_mapping","backend/tests/test_api_endpoints.py::test_first_light_stops_endpoint","backend/tests/test_api_endpoints.py::test_first_light_analyze_endpoint","frontend/tests/first-light-diagnostic.test.tsx"]}]}
+{
+  "schema_version": 1,
+  "current_feature": "source-optimization-v1.30.0",
+  "features": [
+    {
+      "id": "continue-implementation",
+      "title": "Continue implementation and resolve known failures",
+      "status": "done",
+      "acceptance": [
+        "Run checks, fix failures, and implement the next planned feature"
+      ],
+      "implementation": [],
+      "tests": []
+    },
+    {
+      "id": "docs-keycloak-integration",
+      "title": "Add Keycloak to compose.yaml and create documentation",
+      "status": "done",
+      "acceptance": [
+        "Keycloak service added to compose.yaml with realm import",
+        "docs/api.md with complete endpoint reference",
+        "docs/architecture.md with system design and data flows",
+        "docs/deployment.md with TLS proxy, backup/restore, SAML setup",
+        "README updated with documentation links and key deployment info",
+        "All tests pass and preflight check passes"
+      ],
+      "implementation": [
+        "compose.yaml",
+        "keycloak/realm.json",
+        "docs/api.md",
+        "docs/architecture.md",
+        "docs/deployment.md",
+        "README.md"
+      ],
+      "tests": [
+        "backend/tests/test_api_endpoints.py (53 tests)",
+        "backend/tests/test_auth.py (7 tests)",
+        "backend/tests/test_domain_engine.py (33 tests)",
+        "frontend/tests/ (25 tests across 10 files)"
+      ]
+    },
+    {
+      "id": "fix-advisory-path",
+      "title": "Fix broken LLM advisory path and version/desync documentation",
+      "status": "done",
+      "acceptance": [
+        "POST /imports/analyze?explain=true does not crash with ImportError",
+        "generate_advisory exists in advisory.py and is awaited in router",
+        "Advisory field returned when LLM_API_KEY absent with disabled notice",
+        "Version metadata synchronized: VERSION, pyproject.toml, package.json, package-lock.json all 1.29.0",
+        "README auth description matches bearer-token architecture, API table includes OIDC endpoints",
+        "All tests pass and preflight check passes"
+      ],
+      "implementation": [
+        "backend/services/advisory.py",
+        "backend/app/api/router.py",
+        "pyproject.toml",
+        "frontend/package.json",
+        "frontend/package-lock.json",
+        "README.md"
+      ],
+      "tests": [
+        "backend/tests/test_api_endpoints.py::test_import_analysis_with_explain_disabled",
+        "backend/tests/test_domain_engine.py::test_generate_advisory_disabled_without_key"
+      ]
+    },
+    {
+      "id": "source-optimization-v1.30.0",
+      "title": "Source byte optimization and version synchronization to 1.30.0",
+      "status": "done",
+      "acceptance": [
+        "Version metadata synchronized: VERSION, pyproject.toml, package.json, package-lock.json all 1.30.0",
+        "Source bytes reduced to ~150.8KB (from ~153KB) through code consolidation",
+        "Removed unused import record fields (version, file_path, notes)",
+        "Consolidated import analysis schemas",
+        "All 55 backend tests and 25 frontend tests pass",
+        "Frontend builds successfully"
+      ],
+      "implementation": [
+        "backend/models/import_record.py",
+        "backend/schemas/__init__.py",
+        "backend/schemas/import_analysis.py",
+        "backend/schemas/import_record.py",
+        "backend/services/import_analysis.py",
+        "backend/app/api/router.py",
+        "backend/services/first_light_diagnostic.py",
+        "pyproject.toml",
+        "frontend/package.json",
+        "frontend/package-lock.json",
+        "frontend/src/api.ts",
+        "frontend/src/components/import-analysis.tsx"
+      ],
+      "tests": [
+        "backend/tests/ (55 tests)",
+        "frontend/tests/ (25 tests)"
+      ]
+    }
+  ]
+}

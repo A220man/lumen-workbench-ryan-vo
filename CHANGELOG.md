@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.31.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.30.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.

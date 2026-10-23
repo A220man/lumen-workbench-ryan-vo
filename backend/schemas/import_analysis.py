@@ -23,8 +23,6 @@ class ResolutionReportResponse(BaseModel):
     score: int
     blockers: List[str]
     advisory: Optional[str] = None
-
-
 class TitleHistoryItem(BaseModel):
     id: int
     title_id: int
@@ -32,4 +30,10 @@ class TitleHistoryItem(BaseModel):
     new_status: str
     changed_by: str
     changed_at: str
-    notes: Optional[str] = None
+
+
+class ImportAnalysisResponse(BaseModel):
+    id: int
+    title_name: str
+    imported_at: str
+    analyzed_by: Optional[str]
