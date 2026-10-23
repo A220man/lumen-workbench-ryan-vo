@@ -4,7 +4,7 @@ api.interceptors.response.use(r => r, e => Promise.reject(new Error(e.response?.
 
 export interface Title { id: number; name: string; description: string | null; status: string; created_at: string; updated_at: string; is_active: boolean }
 export interface EvaluationRecord { id: number; title_id: number; score: number; comments: string | null; created_at: string; updated_at: string }
-export interface ResolutionReport { source_name: string; needed_libraries: string[]; imports: Array<{ name: string; nid: number; library: string | null; status: string }>; resolved_count: number; unresolved_count: number; missing_module_count: number; coverage: number; score: number; blockers: string[]; advisory?: string }
+export interface ResolutionReport { source_name: string; needed_libraries: string[]; imports: Array<{ name: string; nid: number; library: string | null; status: string }>; resolved_count: number; unresolved_count: number; missing_module_count: number; coverage: number; score: number; blockers: string[] }
 export interface BitfieldLayoutItem { name: string; offset: number; length: number; modeled: boolean; source_builtin: string | null; [k: string]: any }
 export interface ShaderAnalysisResponse { shader_address: string; ancillary_vgpr: string; rejection_reason?: string | null; status: string; live_use_chain: string[]; decoded_word?: any; [k: string]: any }
 
@@ -35,7 +35,10 @@ export interface StopPRItem { number: number; url: string; commit: string; merge
 export interface StartupStopItem { index: number; description: string; error_text: string; shader_cache_misses: number | null; prs: StopPRItem[]; verified: boolean; notes: string }
 export interface FirstLightReportResponse { title_id: string; title_name: string; version: string; stops: StartupStopItem[]; current_stop: number; passed_stops: number; failed_stops: number; status: string; regression_detected: boolean; regression_details: string[] }
 export interface FirstLightPresetItem { name: string; applied_prs: number[]; description: string }
-
 export const getFirstLightStops = async (): Promise<StartupStopItem[]> => (await api.get("/first-light/stops")).data
 export const getFirstLightPresets = async (): Promise<FirstLightPresetItem[]> => (await api.get("/first-light/presets")).data
 export const analyzeFirstLight = async (appliedPrs?: number[]): Promise<FirstLightReportResponse> => (await api.post("/first-light/analyze", { applied_prs: appliedPrs })).data
+
+// Import Analysis
+export const saveImportAnalysis = async (report: ResolutionReport): Promise<{ id: number }> =>
+  (await api.post("/imports/analyze/save", report)).data
