@@ -1,11 +1,35 @@
 {
   "schema_version": 1,
-  "current_feature": "continue-implementation",
+  "current_feature": "save-import-analysis-endpoint",
   "features": [
+    {
+      "id": "save-import-analysis-endpoint",
+      "title": "Implement save import analysis endpoint",
+      "status": "done",
+      "acceptance": [
+        "POST /imports/analyze/save endpoint saves import analysis reports to database",
+        "Frontend \"Save Analysis\" button works end-to-end",
+        "All backend tests pass (55)",
+        "All frontend tests pass (25)",
+        "Frontend builds successfully"
+      ],
+      "implementation": [
+        "backend/app/api/router.py",
+        "backend/models/import_record.py",
+        "backend/schemas/import_analysis.py",
+        "backend/schemas/__init__.py"
+      ],
+      "tests": [
+        "backend/tests/test_api_endpoints.py (21 tests)",
+        "backend/tests/test_auth.py (7 tests)",
+        "backend/tests/test_domain_engine.py (33 tests)",
+        "frontend/tests/import-analysis.test.tsx (3 tests)"
+      ]
+    },
     {
       "id": "continue-implementation",
       "title": "Continue implementation and resolve known failures",
-      "status": "in_progress",
+      "status": "done",
       "acceptance": [
         "Run checks, fix failures, and implement the next planned feature"
       ],

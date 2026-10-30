@@ -3,6 +3,7 @@ from .title import TitleCreate, TitleUpdate, TitleResponse
 from .user import UserCreate, UserResponse
 from .evaluation import EvaluationCreate, EvaluationResponse
 from .import_analysis import (
+    ImportRecordResponse,
     ImportAnalysisResponse,
     ResolvedImportItem,
     ResolutionReportResponse,
@@ -13,6 +14,6 @@ __all__ = [
     "TitleCreate", "TitleUpdate", "TitleResponse",
     "UserCreate", "UserResponse",
     "EvaluationCreate", "EvaluationResponse",
-    "ImportAnalysisResponse", "ResolvedImportItem", "ResolutionReportResponse",
+    "ImportAnalysisResponse", "ResolvedImportItem", "ResolutionReportResponse", "ImportRecordResponse",
     "TitleHistoryItem",
 ]

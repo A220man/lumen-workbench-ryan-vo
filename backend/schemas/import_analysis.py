@@ -1,8 +1,9 @@
 """Import analysis schemas for lumen-workbench-ryan-vo."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ResolvedImportItem(BaseModel):
@@ -23,6 +24,8 @@ class ResolutionReportResponse(BaseModel):
     score: int
     blockers: List[str]
     advisory: Optional[str] = None
+
+
 class TitleHistoryItem(BaseModel):
     id: int
     title_id: int
@@ -37,3 +40,15 @@ class ImportAnalysisResponse(BaseModel):
     title_name: str
     imported_at: str
     analyzed_by: Optional[str]
+
+
+class ImportRecordResponse(BaseModel):
+    """Schema for import record responses."""
+    id: int
+    title_name: str
+    status: str
+    imported_at: datetime
+    analyzed_by: Optional[str]
+    analysis_result: Optional[str]
+
+    model_config = ConfigDict(from_attributes=True)

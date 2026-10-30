@@ -156,6 +156,7 @@ graph TB
 | `/api/v1/titles/{id}` | PUT | Update title |
 | `/api/v1/titles/{id}` | DELETE | Delete title |
 | `/api/v1/imports/analyze` | POST | Upload and parse PS5 ELF imports with resolution report |
+| `/api/v1/imports/analyze/save` | POST | Save import analysis report to database |
 | `/api/v1/evaluations` | GET | List historical evaluation benchmark records |
 | `/api/v1/evaluations/run` | POST | Run evaluation benchmark against labeled dataset |
 | `/api/v1/adversarial/generate` | POST | Synthesize boundary cases for graphics and system modules |
