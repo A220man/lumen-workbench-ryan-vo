@@ -13,7 +13,9 @@ from ...core.db import get_db
 from ...models.audit import AuditLog
 from ...models.evaluation import Evaluation
 from ...models.title import Title
+from ...models.import_record import ImportRecord
 from ...schemas import (
+    ImportRecordResponse,
     EvaluationResponse,
     ResolvedImportItem,
     ResolutionReportResponse,
@@ -217,6 +219,42 @@ async def analyze_imports(
         advisory=adv,
     )
 
+
+
+@router.post("/imports/analyze/save", response_model=ImportRecordResponse)
+async def save_import_analysis(
+    report: ResolutionReportResponse,
+    db: Session = Depends(get_db),
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Save an import analysis report to the database."""
+    record = ImportRecord(
+        title_name=report.source_name,
+        status="completed",
+        analyzed_by=user.get("email", "unknown"),
+        analysis_result=json.dumps({
+            "needed_libraries": report.needed_libraries,
+            "imports": [{"name": i.name, "nid": i.nid, "library": i.library, "status": i.status} for i in report.imports],
+            "resolved_count": report.resolved_count,
+            "unresolved_count": report.unresolved_count,
+            "missing_module_count": report.missing_module_count,
+            "coverage": report.coverage,
+            "score": report.score,
+            "blockers": report.blockers,
+            "advisory": report.advisory,
+        }),
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return ImportRecordResponse(
+        id=record.id,
+        title_name=record.title_name,
+        status=record.status,
+        imported_at=record.imported_at,
+        analyzed_by=record.analyzed_by,
+        analysis_result=record.analysis_result,
+    )
 
 @router.get("/evaluations", response_model=List[EvaluationResponse])
 async def list_evaluations(

@@ -1,7 +1,18 @@
 # Changelog
 
+## 1.32.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.31.0 — work-in-progress checkpoint
 
+### Added
+- **Save Import Analysis Endpoint**: Implemented `POST /api/v1/imports/analyze/save` endpoint to persist import analysis reports to the database. The frontend "Save Analysis" button in the Import Analysis page now works end-to-end, storing the full resolution report (imports, coverage, blockers, advisory) as JSON in the `import_records` table.
+
+### Tests
+- All 55 backend tests pass
+- All 25 frontend tests pass
+- Frontend builds successfully
 Partial code published for continued development. Known issues: STATUS.md.
 
 ## 1.30.0 — work-in-progress checkpoint
