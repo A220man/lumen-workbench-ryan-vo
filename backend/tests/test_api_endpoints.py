@@ -86,6 +86,60 @@ def test_import_analysis_with_explain_disabled(client, operator_headers):
     report = res.json()
     assert "advisory" in report
     assert "LLM advisory disabled" in report["advisory"]
+def test_import_analysis_save_endpoint(client, operator_headers):
+    """Test saving import analysis report to database."""
+    dummy_elf = b"\x7fELF\x02\x01\x01\x00" + b"\x00" * 128
+    files = {"file": ("test_binary.elf", io.BytesIO(dummy_elf), "application/octet-stream")}
+    res = client.post("/api/v1/imports/analyze", files=files, headers=operator_headers)
+    assert res.status_code == 200
+    report = res.json()
+    
+    # Save the analysis
+    save_res = client.post("/api/v1/imports/analyze/save", json=report, headers=operator_headers)
+    assert save_res.status_code == 200
+    saved = save_res.json()
+    assert "id" in saved
+    assert saved["title_name"] == report["source_name"]
+    assert saved["status"] == "completed"
+    assert "analysis_result" in saved
+    assert saved["analyzed_by"] == "operator@test.local"
+    
+    # Verify the saved data contains the analysis
+    import json
+    analysis_data = json.loads(saved["analysis_result"])
+    assert "needed_libraries" in analysis_data
+    assert "imports" in analysis_data
+    assert "resolved_count" in analysis_data
+    assert "coverage" in analysis_data
+    assert "score" in analysis_data
+    assert "blockers" in analysis_data
+
+
+def test_import_analysis_save_multiple(client, operator_headers):
+    """Test saving multiple import analysis reports."""
+    dummy_elf = b"\x7fELF\x02\x01\x01\x00" + b"\x00" * 128
+    files = {"file": ("test_binary.elf", io.BytesIO(dummy_elf), "application/octet-stream")}
+    
+    # First analysis and save
+    res1 = client.post("/api/v1/imports/analyze", files=files, headers=operator_headers)
+    assert res1.status_code == 200
+    report1 = res1.json()
+    save_res1 = client.post("/api/v1/imports/analyze/save", json=report1, headers=operator_headers)
+    assert save_res1.status_code == 200
+    saved1 = save_res1.json()
+    
+    # Second analysis and save
+    res2 = client.post("/api/v1/imports/analyze", files=files, headers=operator_headers)
+    assert res2.status_code == 200
+    report2 = res2.json()
+    save_res2 = client.post("/api/v1/imports/analyze/save", json=report2, headers=operator_headers)
+    assert save_res2.status_code == 200
+    saved2 = save_res2.json()
+    
+    # Verify both have different IDs
+    assert saved1["id"] != saved2["id"]
+    assert saved1["id"] > 0
+    assert saved2["id"] > saved1["id"]
 
 def test_evaluations_run_endpoint(client, operator_headers):
     """Test benchmark evaluation runner endpoint."""
