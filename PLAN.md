@@ -30,3 +30,23 @@ Status: done
 Acceptance:
 - Run checks, fix failures, and implement the next planned feature
 
+### import-analysis-list-endpoint — Implement list saved import analyses endpoint
+
+Status: planned
+
+Acceptance:
+- GET /imports/analyze/saved endpoint lists all saved import analysis records
+- Frontend shows saved analyses in Import Analysis page
+- Backend tests pass
+- Frontend tests pass
+
+### import-analysis-delete-endpoint — Implement delete saved import analysis endpoint
+
+Status: planned
+
+Acceptance:
+- DELETE /imports/analyze/saved/{id} endpoint deletes a saved import analysis record
+- Frontend "Delete" button works for saved analyses
+- Backend tests pass
+- Frontend tests pass
+
