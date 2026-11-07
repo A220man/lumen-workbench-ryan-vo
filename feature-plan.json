@@ -35,6 +35,32 @@
       ],
       "implementation": [],
       "tests": []
+    },
+    {
+      "id": "import-analysis-list-endpoint",
+      "title": "Implement list saved import analyses endpoint",
+      "status": "planned",
+      "acceptance": [
+        "GET /imports/analyze/saved endpoint lists all saved import analysis records",
+        "Frontend shows saved analyses in Import Analysis page",
+        "Backend tests pass",
+        "Frontend tests pass"
+      ],
+      "implementation": [],
+      "tests": []
+    },
+    {
+      "id": "import-analysis-delete-endpoint",
+      "title": "Implement delete saved import analysis endpoint",
+      "status": "planned",
+      "acceptance": [
+        "DELETE /imports/analyze/saved/{id} endpoint deletes a saved import analysis record",
+        "Frontend \"Delete\" button works for saved analyses",
+        "Backend tests pass",
+        "Frontend tests pass"
+      ],
+      "implementation": [],
+      "tests": []
     }
   ]
 }
