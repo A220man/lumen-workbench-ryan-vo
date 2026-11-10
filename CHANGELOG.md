@@ -1,9 +1,21 @@
 # Changelog
 
+## 1.35.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.34.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
 
+### Added
+- **List Saved Import Analyses Endpoint**: Implemented `GET /api/v1/imports/analyze/saved` endpoint to retrieve all saved import analysis records from the database, ordered by most recent first. The frontend Import Analysis page now displays a "Saved Analyses" table showing title name, status, analyzed by, date, and a Load button to reload any previous analysis.
+- **Frontend Integration**: Added `listSavedImportAnalyses` API function in `frontend/src/api.ts`, updated `ImportAnalysis` component with saved analyses state, fetch-on-mount effect, and auto-refresh after saving new analyses.
+
+### Tests
+- Backend: 58 tests pass (added `test_import_analysis_list_endpoint` in `backend/tests/test_api_endpoints.py`)
+- Frontend: 26 tests pass (added saved analyses rendering test in `frontend/tests/import-analysis.test.tsx`)
+- Frontend TypeScript build succeeds (tsc + vite build)
 ## 1.33.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.

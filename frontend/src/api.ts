@@ -42,3 +42,15 @@ export const analyzeFirstLight = async (appliedPrs?: number[]): Promise<FirstLig
 // Import Analysis
 export const saveImportAnalysis = async (report: ResolutionReport): Promise<{ id: number }> =>
   (await api.post("/imports/analyze/save", report)).data
+
+export interface ImportRecordResponse {
+  id: number
+  title_name: string
+  status: string
+  imported_at: string
+  analyzed_by: string | null
+  analysis_result: string | null
+}
+
+export const listSavedImportAnalyses = async (): Promise<ImportRecordResponse[]> =>
+  (await api.get("/imports/analyze/saved")).data

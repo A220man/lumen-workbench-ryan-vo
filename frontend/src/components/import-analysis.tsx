@@ -1,6 +1,6 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useAuth } from "../hooks"
-import { ResolutionReport, analyzeImports, saveImportAnalysis } from "../api"
+import { ResolutionReport, analyzeImports, saveImportAnalysis, listSavedImportAnalyses, ImportRecordResponse } from "../api"
 
 export const ImportAnalysis: React.FC = () => {
   const { isAuthenticated } = useAuth()
@@ -11,6 +11,26 @@ export const ImportAnalysis: React.FC = () => {
   const [report, setReport] = useState<ResolutionReport | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
+  const [savedAnalyses, setSavedAnalyses] = useState<ImportRecordResponse[]>([])
+  const [loadingSaved, setLoadingSaved] = useState(false)
+
+  const fetchSavedAnalyses = async () => {
+    setLoadingSaved(true)
+    try {
+      const analyses = await listSavedImportAnalyses()
+      setSavedAnalyses(analyses)
+    } catch (err) {
+      console.error("Failed to fetch saved analyses:", err)
+    } finally {
+      setLoadingSaved(false)
+    }
+  }
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchSavedAnalyses()
+    }
+  }, [isAuthenticated])
 
   const exportReport = () => {
     if (!report) return
@@ -32,7 +52,7 @@ export const ImportAnalysis: React.FC = () => {
   const handleSave = async () => {
     if (!report) return
     setSaving(true); setSaveMsg(null)
-    try { await saveImportAnalysis(report); setSaveMsg("Analysis saved!") }
+    try { await saveImportAnalysis(report); setSaveMsg("Analysis saved!"); fetchSavedAnalyses() }
     catch (err) { setSaveMsg(`Save failed: ${(err as Error).message}`) }
     finally { setSaving(false) }
   }
@@ -53,6 +73,59 @@ export const ImportAnalysis: React.FC = () => {
         <button type="submit" disabled={loading || !file} className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed">{loading ? "Analyzing..." : "Analyze Imports"}</button>
         {error && <div className="text-red-500">{error}</div>}
       </form>
+
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Saved Analyses</h3>
+        {loadingSaved ? (
+          <div className="text-sm text-gray-500">Loading saved analyses...</div>
+        ) : savedAnalyses.length > 0 ? (
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  {["Title", "Status", "Analyzed By", "Date", "Actions"].map(h => (
+                    <th key={h} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {savedAnalyses.map((analysis, i) => (
+                  <tr key={analysis.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">{analysis.title_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <span className={`px-2 text-xs rounded-full ${
+                        analysis.status === "completed" ? "bg-green-100 text-green-800" :
+                        analysis.status === "pending" ? "bg-yellow-100 text-yellow-800" :
+                        "bg-gray-100 text-gray-800"
+                      }`}>{analysis.status}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{analysis.analyzed_by || "—"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(analysis.imported_at).toLocaleString()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <button
+                        onClick={() => {
+                          try {
+                            const parsed = JSON.parse(analysis.analysis_result || "{}")
+                            setReport(parsed)
+                            setSaveMsg(null)
+                          } catch (e) {
+                            setSaveMsg("Failed to load analysis")
+                          }
+                        }}
+                        className="btn btn-primary text-sm"
+                      >
+                        Load
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-sm text-gray-500">No saved analyses yet. Analyze and save an ELF binary to see it here.</div>
+        )}
+      </div>
 
       {report && (
         <div className="space-y-6">
