@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_feature": "save-import-analysis-endpoint",
+  "current_feature": "import-analysis-list-endpoint",
   "features": [
     {
       "id": "save-import-analysis-endpoint",
@@ -39,15 +39,27 @@
     {
       "id": "import-analysis-list-endpoint",
       "title": "Implement list saved import analyses endpoint",
-      "status": "planned",
+      "status": "done",
       "acceptance": [
         "GET /imports/analyze/saved endpoint lists all saved import analysis records",
         "Frontend shows saved analyses in Import Analysis page",
-        "Backend tests pass",
-        "Frontend tests pass"
+        "Backend tests pass (58)",
+        "Frontend tests pass (26)",
+        "Frontend builds successfully"
       ],
-      "implementation": [],
-      "tests": []
+      "implementation": [
+        "backend/app/api/router.py",
+        "backend/tests/test_api_endpoints.py",
+        "frontend/src/api.ts",
+        "frontend/src/components/import-analysis.tsx",
+        "frontend/tests/import-analysis.test.tsx"
+      ],
+      "tests": [
+        "backend/tests/test_api_endpoints.py (24 tests)",
+        "backend/tests/test_auth.py (7 tests)",
+        "backend/tests/test_domain_engine.py (33 tests)",
+        "frontend/tests/import-analysis.test.tsx (4 tests)"
+      ]
     },
     {
       "id": "import-analysis-delete-endpoint",

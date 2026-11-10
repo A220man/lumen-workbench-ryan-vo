@@ -141,6 +141,45 @@ def test_import_analysis_save_multiple(client, operator_headers):
     assert saved1["id"] > 0
     assert saved2["id"] > saved1["id"]
 
+def test_import_analysis_list_endpoint(client, operator_headers):
+    """Test listing saved import analysis records."""
+    dummy_elf = b"\x7fELF\x02\x01\x01\x00" + b"\x00" * 128
+    files = {"file": ("test_binary.elf", io.BytesIO(dummy_elf), "application/octet-stream")}
+    
+    # Save two analyses
+    res1 = client.post("/api/v1/imports/analyze", files=files, headers=operator_headers)
+    assert res1.status_code == 200
+    report1 = res1.json()
+    save_res1 = client.post("/api/v1/imports/analyze/save", json=report1, headers=operator_headers)
+    assert save_res1.status_code == 200
+    saved1 = save_res1.json()
+    
+    res2 = client.post("/api/v1/imports/analyze", files=files, headers=operator_headers)
+    assert res2.status_code == 200
+    report2 = res2.json()
+    save_res2 = client.post("/api/v1/imports/analyze/save", json=report2, headers=operator_headers)
+    assert save_res2.status_code == 200
+    saved2 = save_res2.json()
+    
+    # List saved analyses
+    list_res = client.get("/api/v1/imports/analyze/saved", headers=operator_headers)
+    assert list_res.status_code == 200
+    saved_list = list_res.json()
+    assert isinstance(saved_list, list)
+    assert len(saved_list) >= 2
+    
+    # Check ordering (most recent first)
+    assert saved_list[0]["id"] >= saved_list[1]["id"]
+    
+    # Verify fields
+    for item in saved_list[:2]:
+        assert "id" in item
+        assert "title_name" in item
+        assert "status" in item
+        assert "imported_at" in item
+        assert "analyzed_by" in item
+        assert "analysis_result" in item
+
 def test_evaluations_run_endpoint(client, operator_headers):
     """Test benchmark evaluation runner endpoint."""
     res = client.post("/api/v1/evaluations/run", json={}, headers=operator_headers)

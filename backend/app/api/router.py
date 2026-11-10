@@ -255,6 +255,14 @@ async def save_import_analysis(
         analyzed_by=record.analyzed_by,
         analysis_result=record.analysis_result,
     )
+@router.get("/imports/analyze/saved", response_model=List[ImportRecordResponse])
+async def list_saved_import_analyses(
+    db: Session = Depends(get_db), user: Dict[str, Any] = Depends(get_current_user)
+):
+    """List all saved import analysis records."""
+    records = db.execute(select(ImportRecord).order_by(ImportRecord.imported_at.desc())).scalars().all()
+    return [ImportRecordResponse.model_validate(r) for r in records]
+
 
 @router.get("/evaluations", response_model=List[EvaluationResponse])
 async def list_evaluations(
