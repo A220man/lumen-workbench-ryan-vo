@@ -19,5 +19,6 @@
     "ollama"
   ],
   "summary": "Work in progress: lumen-workbench-ryan-vo",
-  "status": "work-in-progress"
+  "status": "work-in-progress",
+  "version": "1.36.0"
 }

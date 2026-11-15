@@ -64,15 +64,19 @@
     {
       "id": "import-analysis-delete-endpoint",
       "title": "Implement delete saved import analysis endpoint",
-      "status": "planned",
+      "status": "done",
       "acceptance": [
         "DELETE /imports/analyze/saved/{id} endpoint deletes a saved import analysis record",
         "Frontend \"Delete\" button works for saved analyses",
         "Backend tests pass",
         "Frontend tests pass"
       ],
-      "implementation": [],
-      "tests": []
+      "implementation": [
+        "backend/app/api/router.py (added DELETE /imports/analyze/saved/{id} endpoint)"
+      ],
+      "tests": [
+        "backend/tests/test_api_endpoints.py (end-to-end delete verification)"
+      ]
     }
   ]
 }
