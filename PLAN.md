@@ -47,11 +47,15 @@ Tests: `backend/tests/test_api_endpoints.py (24 tests)`, `backend/tests/test_aut
 
 ### import-analysis-delete-endpoint — Implement delete saved import analysis endpoint
 
-Status: planned
+Status: done
 
 Acceptance:
 - DELETE /imports/analyze/saved/{id} endpoint deletes a saved import analysis record
 - Frontend "Delete" button works for saved analyses
 - Backend tests pass
 - Frontend tests pass
+
+Implementation: `backend/app/api/router.py (added DELETE /imports/analyze/saved/{id} endpoint)`
+
+Tests: `backend/tests/test_api_endpoints.py (end-to-end delete verification)`
 

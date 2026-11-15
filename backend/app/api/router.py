@@ -503,3 +503,23 @@ async def analyze_first_light(
         regression_detected=report.regression_detected,
         regression_details=report.regression_details,
     )
+@router.delete("/imports/analyze/saved/{id}", status_code=204)
+async def delete_saved_import_analysis(
+    id: int,
+    db: Session = Depends(get_db),
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Delete a saved import analysis record."""
+    record = db.get(ImportRecord, id)
+    if not record:
+        raise HTTPException(404, "Saved import analysis not found")
+    db.add(
+        AuditLog(
+            action="delete_import_analysis",
+            entity_type="import_record",
+            entity_id=id,
+            details=f"Import analysis record {id} deleted by {user.get('email')}"),
+    )
+    db.delete(record)
+    db.commit()
+    return None
