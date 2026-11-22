@@ -518,7 +518,7 @@ async def delete_saved_import_analysis(
             action="delete_import_analysis",
             entity_type="import_record",
             entity_id=id,
-            details=f"Import analysis record {id} deleted by {user.get('email')}"),
+            details=f"Import analysis record {id} deleted by {user.get('email', 'unknown')}"),
     )
     db.delete(record)
     db.commit()
