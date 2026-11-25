@@ -12,7 +12,7 @@ class ImportRecord(Base):
     title_name = Column(String(255), nullable=False)
     status = Column(String(50), default="pending")
     imported_at = Column(DateTime, default=utc_now)
-    analyzed_by = Column(String(255))
+    analyzed_by = Column(String(255), server_default="unknown")
     analysis_result = Column(String(2048))
 
     def __repr__(self):
